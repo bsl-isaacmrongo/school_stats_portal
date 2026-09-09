@@ -1,0 +1,9 @@
+    <div class="bg-white p-6 rounded-2xl shadow-sm hover:shadow-md transition">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-3xl">{{ icon }}</span>
+        <span *ngIf="percentage" class="text-sm font-medium text-green-600">+{{ percentage }}%</span>
+      </div>
+      <p class="text-3xl font-bold text-neutral-900">{{ value | number }}</p>
+      <p class="text-sm text-neutral-500 mt-1">{{ title }}</p>
+    </div>
+    

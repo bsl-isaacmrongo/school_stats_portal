@@ -2,7 +2,8 @@
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "version": 1,
   "cli": {
-    "packageManager": "npm"
+    "packageManager": "npm",
+    "analytics": "2ed45e55-1413-4460-89a4-e11b5e55dea6"
   },
   "newProjectRoot": "projects",
   "projects": {
@@ -25,7 +26,8 @@
               }
             ],
             "styles": [
-              "src/styles.css"
+              "src/styles.css",
+              "node_modules/ngx-toastr/toastr.css"
             ]
           },
           "configurations": {
@@ -59,7 +61,8 @@
               "buildTarget": "school_stats_portal:build:production"
             },
             "development": {
-              "buildTarget": "school_stats_portal:build:development"
+              "buildTarget": "school_stats_portal:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

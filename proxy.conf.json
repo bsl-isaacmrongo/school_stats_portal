@@ -1,0 +1,8 @@
+{
+  "/api": {
+    "target": "https://bnisapi.braeburn.ac.ke",
+    "secure": true,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

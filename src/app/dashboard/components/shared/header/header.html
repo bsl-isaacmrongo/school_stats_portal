@@ -1,0 +1,44 @@
+<header class="flex justify-between items-center px-6 py-4 bg-white border-b border-neutral-200">
+  <div>
+    <h1 class="text-2xl font-bold text-neutral-900">{{ pageTitle() }}</h1>
+    <p class="text-neutral-500 text-sm">{{ pageSubtitle() }}</p>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <span class="text-sm text-neutral-500 hidden md:inline">
+      Last updated: {{ lastUpdated() | date:'medium' }}
+    </span>
+
+    <!-- User dropdown -->
+    <div class="relative">
+      <button (click)="toggleDropdown()"
+              class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-100 transition">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold"
+             style="background: var(--gradient-primary);">
+          {{ userInitials() }}
+        </div>
+        <span class="text-sm font-medium text-neutral-700 hidden sm:inline">{{ userName() }}</span>
+        <svg class="w-4 h-4 text-neutral-400 transition-transform" [class.rotate-180]="dropdownOpen()"
+             fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      @if (dropdownOpen()) {
+        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-[var(--shadow-custom-lg)] border border-neutral-100 py-1 z-50">
+          <a class="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
+            👤 Profile
+          </a>
+          <a class="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
+            ⚙️ Settings
+          </a>
+          <div class="border-t border-neutral-100 my-1"></div>
+          <button (click)="logout()"
+                  class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left">
+            🚪 Logout
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</header>

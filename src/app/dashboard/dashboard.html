@@ -1,0 +1,26 @@
+@if (loading()) {
+  <div class="min-h-[24rem] flex items-center justify-center">
+    <app-loader [size]="56" [color]="'var(--colorsUtilityMajor500)'" label="Loading dashboard..." />
+  </div>
+} @else {
+  <!-- KPI Cards Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <app-metric-card title="Total Students" [value]="data().totalStudents" icon="👥" color="blue" />
+    <app-metric-card title="Boys" [value]="data().genderBreakdown.boys" [percentage]="calculatePercentage('boys')" icon="👦" color="blue" />
+    <app-metric-card title="Girls" [value]="data().genderBreakdown.girls" [percentage]="calculatePercentage('girls')" icon="👧" color="pink" />
+  </div>
+
+  <!-- Chart + Year Groups Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-sm">
+      <h3 class="text-lg font-semibold text-neutral-900 mb-4">Gender Distribution</h3>
+      <app-gender-chart [data]="data().genderBreakdown" />
+    </div>
+
+    <div class="lg:col-span-2">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <app-year-group-chart *ngFor="let year of data().yearGroups" [yearData]="year" />
+      </div>
+    </div>
+  </div>
+}

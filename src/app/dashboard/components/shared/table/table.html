@@ -1,0 +1,96 @@
+<div class="overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead>
+      <tr style="background: var(--colorsUtilityMajor500);">
+        @for (col of columns(); track col.key) {
+          <th class="px-6 py-3 font-medium text-white"
+              [class.text-left]="col.align !== 'right' && col.align !== 'center'"
+              [class.text-right]="col.align === 'right'"
+              [class.text-center]="col.align === 'center'"
+              [style.width]="col.width">
+            {{ col.label }}
+          </th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of paginatedData(); track trackBy()(row); let odd = $odd) {
+        <tr [class]="odd
+              ? 'bg-[#b3c2c9]/[0.18] hover:bg-[#668494]/[0.14] transition-colors'
+              : 'bg-white hover:bg-[#668494]/[0.14] transition-colors'">
+          @for (col of columns(); track col.key) {
+            <td class="px-6 py-3 text-neutral-700"
+                [class.text-right]="col.align === 'right'"
+                [class.text-center]="col.align === 'center'">
+              @if (templateFor(col.key); as tpl) {
+                <ng-container *ngTemplateOutlet="tpl; context: { $implicit: row, row: row }" />
+              } @else {
+                {{ cellValue(row, col.key) }}
+              }
+            </td>
+          }
+        </tr>
+      } @empty {
+        <tr>
+          <td [attr.colspan]="columns().length" class="px-6 py-8 text-center text-neutral-400">
+            {{ emptyMessage() }}
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+@if (data().length > 0) {
+  <div class="flex flex-col sm:flex-row justify-between items-center gap-3 px-6 py-4 border-t"
+       style="border-color: var(--colorsUtilityMajor100);">
+
+    <div class="flex items-center gap-4">
+      <span class="text-sm text-neutral-500 whitespace-nowrap">
+        Showing {{ rangeStart() }}–{{ rangeEnd() }} of {{ totalItems() ?? data().length }}
+      </span>
+
+      <label class="flex items-center gap-2 text-sm text-neutral-500 whitespace-nowrap">
+        Rows per page: {{ activePageSize() }}
+        <select
+          class="border rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 transition"
+          [style.borderColor]="'var(--colorsUtilityMajor200)'"
+          style="--tw-ring-color: var(--colorsUtilityMajor400);"
+          (change)="onPageSizeChange(+$any($event.target).value)">
+          @for (size of pageSizeOptions(); track size) {
+            <option [value]="size" [selected]="size === activePageSize()">{{ size }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <div class="flex items-center gap-1">
+      <button (click)="prevPage()" [disabled]="activePage() === 1"
+              class="px-3 py-1.5 text-sm rounded-lg border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-neutral-50 transition"
+              [style.borderColor]="'var(--colorsUtilityMajor200)'">
+        ‹ Prev
+      </button>
+
+      @for (item of pageItems(); track $index) {
+        @if (item === 'ellipsis') {
+          <span class="w-8 h-8 flex items-center justify-center text-sm text-neutral-400 select-none">
+            &hellip;
+          </span>
+        } @else {
+          <button (click)="goToPage(item)"
+                  class="w-8 h-8 text-sm rounded-lg transition"
+                  [style.background]="item === activePage() ? 'var(--colorsUtilityMajor500)' : 'transparent'"
+                  [style.color]="item === activePage() ? '#ffffff' : 'var(--colorsUtilityMajor500)'">
+            {{ item }}
+          </button>
+        }
+      }
+
+      <button (click)="nextPage()" [disabled]="activePage() === totalPages()"
+              class="px-3 py-1.5 text-sm rounded-lg border disabled:opacity-40 disabled:cursor-not-allowed hover:bg-neutral-50 transition"
+              [style.borderColor]="'var(--colorsUtilityMajor200)'">
+        Next ›
+      </button>
+    </div>
+  </div>
+}
