@@ -60,7 +60,7 @@ export class StudentDataService {
     );
   }
 
-  getYearGroupDetails(school: string): Observable<YearGroupApiResponse[]> {
+  getYearGroupDetails(school = 'CL1-BGESS'): Observable<YearGroupApiResponse[]> {
     return this.http.get<YearGroupApiResponse[]>(
       `${environment.apiUrl}/v1/lookups/getyeargroupformslookup/${encodeURIComponent(school)}`
     );
