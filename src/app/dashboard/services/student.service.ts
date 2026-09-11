@@ -4,6 +4,7 @@ import { catchError, finalize, map, Observable, of, tap, throwError } from 'rxjs
 import { environment } from '../../env';
 import { Pupil, StudentData } from '../models/student.model';
 import { MOCK_DATA } from './mock-data';
+import { YearGroupApiResponse } from '../components/year-group-details/year-group-model';
 
 type ApiPupil = Record<string, unknown>;
 
@@ -11,8 +12,11 @@ type ApiPupil = Record<string, unknown>;
 export class StudentDataService {
   private data = signal<StudentData>(MOCK_DATA);
   readonly pupils = signal<Pupil[]>([]);
+  readonly leavers = signal<Pupil[]>([]);
   private loadedSchools = signal<Record<string, boolean>>({});
+  private loadedLeaverSchools = signal<Record<string, boolean>>({});
   readonly pupilsLoading = signal(false);
+  readonly leaversLoading = signal(false);
 
   constructor(private http: HttpClient) {}
 
@@ -36,6 +40,29 @@ export class StudentDataService {
       }),
       finalize(() => this.pupilsLoading.set(false)),
       catchError(error => throwError(() => error))
+    );
+  }
+
+  getLeavers(school = 'CL1-BGESS'): Observable<Pupil[]> {
+    if (this.loadedLeaverSchools()[school]) return of(this.leavers());
+
+    this.leaversLoading.set(true);
+    return this.http.get<ApiPupil[]>(
+      `${environment.apiUrl}/v1/analytics/getleaverpupilinfo/${encodeURIComponent(school)}`
+    ).pipe(
+      map(response => response.map(pupil => this.mapPupil(pupil))),
+      tap(leavers => {
+        this.leavers.set(leavers);
+        this.loadedLeaverSchools.update(schools => ({ ...schools, [school]: true }));
+      }),
+      finalize(() => this.leaversLoading.set(false)),
+      catchError(error => throwError(() => error))
+    );
+  }
+
+  getYearGroupDetails(school: string): Observable<YearGroupApiResponse[]> {
+    return this.http.get<YearGroupApiResponse[]>(
+      `${environment.apiUrl}/v1/lookups/getyeargroupformslookup/${encodeURIComponent(school)}`
     );
   }
 
@@ -66,7 +93,7 @@ export class StudentDataService {
       dob: this.stringValue(apiPupil, 'dob'),
       formName: this.stringValue(apiPupil, 'formName'),
       yearGroupCode: this.stringValue(apiPupil, 'yearGroupCode'),
-      yearGroup: this.stringValue(apiPupil, 'yearGroup', 'year', 'yearName'),
+      yearGroup: this.stringValue(apiPupil, 'yearGroup'),
       registrationGroupCode: this.stringValue(apiPupil, 'registrationGroupCode'),
       registrationGroup: this.stringValue(apiPupil, 'registrationGroup'),
       houseCode: this.stringValue(apiPupil, 'houseCode'),

@@ -1,31 +1,40 @@
-  <div class="bg-white p-4 rounded-2xl shadow-sm hover:shadow-md transition">
-      <div class="flex justify-between items-start">
-        <h4 class="font-semibold text-neutral-900">{{ yearData.year }}</h4>
-        <span class="text-lg font-bold text-neutral-900">{{ yearData.total }}</span>
-      </div>
-
-      <!-- Mini Progress Bars -->
-      <div class="mt-3 space-y-2">
-        <div>
-          <div class="flex justify-between text-xs text-neutral-500">
-            <span>Boys ({{ yearData.boys }})</span>
-            <span>{{ (yearData.boys / yearData.total! * 100) | number:'1.0-0' }}%</span>
-          </div>
-          <div class="w-full bg-neutral-100 rounded-full h-2">
-            <div class="bg-blue-500 h-2 rounded-full"
-              [style.width.%]="(yearData.boys / yearData.total! * 100)"></div>
-          </div>
-        </div>
-        <div>
-          <div class="flex justify-between text-xs text-neutral-500">
-            <span>Girls ({{ yearData.girls }})</span>
-            <span>{{ (yearData.girls / yearData.total! * 100) | number:'1.0-0' }}%</span>
-          </div>
-          <div class="w-full bg-neutral-100 rounded-full h-2">
-            <div class="bg-pink-500 h-2 rounded-full"
-              [style.width.%]="(yearData.girls / yearData.total! * 100)"></div>
-          </div>
-        </div>
-      </div>
+<!-- components/year-group-chart/year-group-chart.html -->
+<div
+  role="button"
+  tabindex="0"
+  (click)="navigateToYearGroup()"
+  (keydown.enter)="navigateToYearGroup()"
+  (keydown.space)="navigateToYearGroup(); $event.preventDefault()"
+  class="bg-white rounded-xl border border-neutralSlate-200 p-4 shadow-xs hover:shadow-md hover:border-brandTertiary-300 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-brandTertiary-400/40">
+  <div class="flex items-start justify-between mb-3">
+    <div>
+      <h3 class="text-xs font-bold text-neutralSlate-900">{{ yearData.year }}</h3>
+      @if (yearData.stage) {
+        <span class="text-[11px] text-neutralSlate-400 font-medium">{{ yearData.stage }}</span>
+      }
     </div>
-    
+    <span class="text-lg font-extrabold text-neutralSlate-900 bg-neutralSlate-50 px-2.5 py-0.5 rounded-lg border border-neutralSlate-200">
+      {{ yearData.total }}
+    </span>
+  </div>
+
+  <div class="space-y-1.5">
+    <div class="flex justify-between text-xs font-medium">
+      <span class="text-neutralSlate-600">Boys (<strong class="text-neutralSlate-800">{{ yearData.boys }}</strong>)</span>
+      <span class="text-brandTertiary-700 font-bold text-[11px]">{{ boysPercent() }}%</span>
+    </div>
+    <div class="w-full bg-neutralSlate-100 rounded-full h-2 overflow-hidden flex">
+      <div class="bg-brandTertiary-500 h-2 rounded-l-full transition-all" [style.width.%]="boysPercent()"></div>
+      <div class="bg-neutralSlate-200 h-2 flex-1"></div>
+    </div>
+
+    <div class="flex justify-between text-xs font-medium pt-1">
+      <span class="text-neutralSlate-600">Girls (<strong class="text-neutralSlate-800">{{ yearData.girls }}</strong>)</span>
+      <span class="text-brandSecondary-700 font-bold text-[11px]">{{ girlsPercent() }}%</span>
+    </div>
+    <div class="w-full bg-neutralSlate-100 rounded-full h-2 overflow-hidden flex">
+      <div class="bg-brandSecondary-500 h-2 rounded-l-full transition-all" [style.width.%]="girlsPercent()"></div>
+      <div class="bg-neutralSlate-200 h-2 flex-1"></div>
+    </div>
+  </div>
+</div>

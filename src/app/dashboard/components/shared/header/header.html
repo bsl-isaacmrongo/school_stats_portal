@@ -1,38 +1,52 @@
-<header class="flex justify-between items-center px-6 py-4 bg-white border-b border-neutral-200">
-  <div>
-    <h1 class="text-2xl font-bold text-neutral-900">{{ pageTitle() }}</h1>
-    <p class="text-neutral-500 text-sm">{{ pageSubtitle() }}</p>
+<header class="h-16 flex-shrink-0 bg-white border-b border-neutralSlate-200 px-6 flex items-center justify-between shadow-sm z-10">
+  <!-- Left: Page title + breadcrumb -->
+  <div class="flex items-center gap-3">
+    <div class="w-2 h-7 rounded-full bg-gradient-to-b from-brandTertiary-500 to-brandPrimary-500"></div>
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-lg font-extrabold tracking-tight text-neutralSlate-900">{{ pageTitle() }}</h1>
+        <span class="px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase bg-brandTertiary-50 text-brandTertiary-700 border border-brandTertiary-200 rounded-md">
+          Live Data
+        </span>
+      </div>
+      <p class="text-xs text-neutralSlate-500 font-medium">{{ pageSubtitle() }}</p>
+    </div>
   </div>
 
-  <div class="flex items-center gap-4">
-    <span class="text-sm text-neutral-500 hidden md:inline">
-      Last updated: {{ lastUpdated() | date:'medium' }}
-    </span>
+  <!-- Right: Timestamp + Profile -->
+  <div class="flex items-center gap-5">
+    <!-- Timestamp -->
+    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-neutralSlate-50 border border-neutralSlate-200 text-xs text-neutralSlate-500">
+      <svg class="w-3.5 h-3.5 text-neutralSlate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <span>Last updated: <strong class="font-semibold text-neutralSlate-700">{{ lastUpdated() | date:'medium' }}</strong></span>
+    </div>
 
-    <!-- User dropdown -->
-    <div class="relative">
+    <!-- Profile dropdown -->
+    <div class="flex items-center gap-2 pl-3 border-l border-neutralSlate-200 relative">
       <button (click)="toggleDropdown()"
-              class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-neutral-100 transition">
-        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-semibold"
-             style="background: var(--gradient-primary);">
+              class="flex items-center gap-2.5 p-1 rounded-full hover:bg-neutralSlate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-brandTertiary-400"
+              type="button">
+        <div class="w-8 h-8 rounded-full bg-brandPrimary-500 text-white font-bold text-xs flex items-center justify-center shadow-sm ring-2 ring-white">
           {{ userInitials() }}
         </div>
-        <span class="text-sm font-medium text-neutral-700 hidden sm:inline">{{ userName() }}</span>
-        <svg class="w-4 h-4 text-neutral-400 transition-transform" [class.rotate-180]="dropdownOpen()"
-             fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        <span class="text-xs font-semibold text-neutralSlate-700 hidden sm:inline">{{ userName() }}</span>
+        <svg class="w-3.5 h-3.5 text-neutralSlate-400 transition-transform" [class.rotate-180]="dropdownOpen()"
+             fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
         </svg>
       </button>
 
       @if (dropdownOpen()) {
-        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-[var(--shadow-custom-lg)] border border-neutral-100 py-1 z-50">
-          <a class="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
+        <div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-[var(--shadow-custom-lg)] border border-neutralSlate-100 py-1 z-50">
+          <a class="flex items-center gap-2 px-4 py-2.5 text-sm text-neutralSlate-700 hover:bg-neutralSlate-50 cursor-pointer">
             👤 Profile
           </a>
-          <a class="flex items-center gap-2 px-4 py-2.5 text-sm text-neutral-700 hover:bg-neutral-50">
+          <a class="flex items-center gap-2 px-4 py-2.5 text-sm text-neutralSlate-700 hover:bg-neutralSlate-50 cursor-pointer">
             ⚙️ Settings
           </a>
-          <div class="border-t border-neutral-100 my-1"></div>
+          <div class="border-t border-neutralSlate-100 my-1"></div>
           <button (click)="logout()"
                   class="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 text-left">
             🚪 Logout

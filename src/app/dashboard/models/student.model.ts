@@ -1,8 +1,11 @@
 export interface YearGroup {
+  yearGroupId?: string;
   year: string;
   boys: number;
   girls: number;
-  total?: number;
+  total: number;
+  name?: string;
+  stage?: string;
 }
 
 export interface StudentData {
@@ -10,6 +13,11 @@ export interface StudentData {
   genderBreakdown: { boys: number; girls: number };
   yearGroups: YearGroup[];
   lastUpdated: string;
+}
+
+export interface AcademicYearStats {
+  joiners: number;
+  leavers: number;
 }
 
 export interface Pupil {

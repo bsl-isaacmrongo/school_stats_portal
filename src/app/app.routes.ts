@@ -19,7 +19,13 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./dashboard/dashboard').then(m => m.Dashboard) },
       { path: 'students', loadComponent: () => import('./dashboard/components/students/students').then(m => m.Students) },
-      { path: 'students/:id', loadComponent: () => import('./dashboard/components/students/student-details/student-details').then(m => m.StudentDetails) }
+      { path: 'students/:id', loadComponent: () => import('./dashboard/components/students/student-details/student-details').then(m => m.StudentDetails) },
+      { path: 'year-group/:id', loadComponent: () => import('./dashboard/components/year-group-details/year-group-details').then(m => m.YearGroupDetails) },
+      {
+  path: 'year-groups/:yearGroupId',
+  loadComponent: () =>
+    import('./dashboard/components/year-group-details/year-group-details').then(m => m.YearGroupDetails),
+}
     ]
   },
   { path: '**', redirectTo: '/login' }

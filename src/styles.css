@@ -1,5 +1,54 @@
 @import 'tailwindcss';
 
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+/* Add to styles.css after @import 'tailwindcss' */
+@theme {
+  --color-brandPrimary-50: #e8eaf0;
+  --color-brandPrimary-100: #d1d4e0;
+  --color-brandPrimary-200: #a3a9c1;
+  --color-brandPrimary-300: #757ea2;
+  --color-brandPrimary-400: #475383;
+  --color-brandPrimary-500: #202858;
+  --color-brandPrimary-600: #1a2046;
+  --color-brandPrimary-700: #131835;
+  --color-brandPrimary-800: #0d1023;
+  --color-brandPrimary-900: #060812;
+
+  --color-brandSecondary-50: #fff8e6;
+  --color-brandSecondary-100: #fff0cc;
+  --color-brandSecondary-200: #fee199;
+  --color-brandSecondary-300: #fed266;
+  --color-brandSecondary-400: #fdc333;
+  --color-brandSecondary-500: #fcb900;
+  --color-brandSecondary-600: #ca9400;
+  --color-brandSecondary-700: #976f00;
+  --color-brandSecondary-800: #654a00;
+  --color-brandSecondary-900: #322500;
+
+  --color-brandTertiary-50: #e8f0f8;
+  --color-brandTertiary-100: #d1e0f0;
+  --color-brandTertiary-200: #a3c1e1;
+  --color-brandTertiary-300: #75a2d2;
+  --color-brandTertiary-400: #4783c3;
+  --color-brandTertiary-500: #2b6cb0;
+  --color-brandTertiary-600: #22568d;
+  --color-brandTertiary-700: #1a416a;
+  --color-brandTertiary-800: #112b46;
+  --color-brandTertiary-900: #091623;
+
+  --color-neutralSlate-50: #f8fafc;
+  --color-neutralSlate-100: #f1f5f9;
+  --color-neutralSlate-200: #e2e8f0;
+  --color-neutralSlate-300: #cbd5e1;
+  --color-neutralSlate-400: #94a3b8;
+  --color-neutralSlate-500: #64748b;
+  --color-neutralSlate-600: #475569;
+  --color-neutralSlate-700: #334155;
+  --color-neutralSlate-800: #1e293b;
+  --color-neutralSlate-900: #0f172a;
+}
+
 :root {
   /* Primary Colors */
   --color-primary-50: #e8eaf0;
@@ -97,28 +146,29 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* ============================================
    SCROLLBAR STYLING
    ============================================ */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
   background: var(--color-neutral-100);
-  border-radius: var(--radius-lg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-primary-400);
-  border-radius: var(--radius-lg);
+  background: var(--color-neutral-300);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-primary-500);
+  background: var(--color-neutral-400);
 }
 
 /* ============================================
