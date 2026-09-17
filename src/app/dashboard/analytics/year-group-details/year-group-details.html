@@ -6,7 +6,6 @@
 } @else if (detail(); as d) {
   <div class="flex flex-col w-full pb-8">
 
-    <!-- ═══ Top Navigation & Cohort Selector ═══ -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
       <div class="flex flex-col gap-1">
         <!-- Breadcrumb -->
@@ -35,47 +34,28 @@
 
       <!-- Quick actions -->
       <div class="flex items-center gap-2 flex-wrap">
-        <!-- Year group selector -->
-        <div class="relative">
-          <select class="appearance-none bg-white text-neutralSlate-900 text-sm pl-4 pr-9 py-2 rounded-lg shadow-sm border border-neutralSlate-200 focus:outline-none focus:ring-2 focus:ring-brandPrimary-500/30 cursor-pointer"
-                  [ngModel]="yearGroupId()"
-                  (ngModelChange)="onYearGroupChange($event)">
-            @for (option of academicYearOptions(); track option.value) {
-              <option [value]="option.value">{{ option.label }}</option>
-            }
-          </select>
-          <lucide-icon [img]="icons.UnfoldVertical" [size]="16"
-                       class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-neutralSlate-500"></lucide-icon>
-        </div>
-
-        <!-- Cohort actions dropdown -->
-        <div class="relative inline-block text-left">
+        <div class="relative inline-block text-left" clickOutside (clickOutside)="closeActionsMenu()">
           <button type="button"
                   (click)="toggleActionsMenu()"
                   class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-brandPrimary-500 text-white text-sm font-medium hover:bg-brandPrimary-600 shadow-sm transition-colors">
-            <lucide-icon [img]="icons.Share2" [size]="16"></lucide-icon>
-            <span>Cohort Actions</span>
-            <lucide-icon [img]="icons.ChevronDown" [size]="16"></lucide-icon>
+            <lucide-icon [img]="icons.ArrowLeftRight" [size]="16"></lucide-icon>
+            <span>Switch Year Group</span>
+            <lucide-icon [img]="icons.ChevronsUpDown" [size]="16"></lucide-icon>
           </button>
 
           @if (actionsMenuOpen()) {
-            <div class="absolute right-0 mt-2 w-56 rounded-xl bg-white shadow-xl z-30 p-1.5 flex flex-col gap-0.5 border border-neutralSlate-100">
-              <a class="flex items-center gap-2 px-3 py-2 text-xs font-medium text-neutralSlate-700 hover:bg-neutralSlate-50 rounded-lg transition-colors cursor-pointer">
-                <lucide-icon [img]="icons.Download" [size]="16" class="text-brandPrimary-500"></lucide-icon>
-                Export Year Roster (CSV)
-              </a>
-              <a class="flex items-center gap-2 px-3 py-2 text-xs font-medium text-neutralSlate-700 hover:bg-neutralSlate-50 rounded-lg transition-colors cursor-pointer">
-                <lucide-icon [img]="icons.Mail" [size]="16" class="text-brandPrimary-500"></lucide-icon>
-                Email All Form Tutors
-              </a>
-              <a class="flex items-center gap-2 px-3 py-2 text-xs font-medium text-neutralSlate-700 hover:bg-neutralSlate-50 rounded-lg transition-colors cursor-pointer">
-                <lucide-icon [img]="icons.UserPlus" [size]="16" class="text-brandPrimary-500"></lucide-icon>
-                Assign New Form Tutor
-              </a>
-              <a class="flex items-center gap-2 px-3 py-2 text-xs font-medium text-neutralSlate-700 hover:bg-neutralSlate-50 rounded-lg transition-colors cursor-pointer">
-                <lucide-icon [img]="icons.Printer" [size]="16" class="text-brandPrimary-500"></lucide-icon>
-                Print Cohort Dossier
-              </a>
+            <div class="absolute right-0 mt-2 w-72 rounded-xl bg-white shadow-xl z-30 p-1.5 flex flex-col gap-0.5 border border-neutralSlate-100">
+              <div class="px-2 py-1.5 text-[10px] font-bold uppercase tracking-wider text-neutralSlate-500">Select cohort</div>
+              @for (option of academicYearOptions(); track option.value) {
+                <button type="button"
+                        (click)="onYearGroupChange(option.value); closeActionsMenu()"
+                        class="flex items-center justify-between gap-2 px-3 py-2 text-xs font-medium text-neutralSlate-700 hover:bg-neutralSlate-50 rounded-lg transition-colors text-left">
+                  <span>{{ option.label }}</span>
+                  @if (option.value === yearGroupId()) {
+                    <span class="text-[10px] font-semibold text-brandPrimary-500">Current</span>
+                  }
+                </button>
+              }
             </div>
           }
         </div>

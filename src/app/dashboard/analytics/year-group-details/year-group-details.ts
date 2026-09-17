@@ -15,7 +15,7 @@ import {
   LucideAngularModule,
   ArrowLeft, Users, Mail, ChevronRight, Search, LayoutGrid, List,
   School, UnfoldVertical, Share2, ChevronDown, Download, UserPlus,
-  Printer, Copy, Info, MapPin, Clock, ShieldCheck, SearchX,
+  Printer, Copy, Info, MapPin, Clock, ShieldCheck, SearchX, ArrowLeftRight, ChevronsUpDown
 } from 'lucide-angular';
 import {
   FormGroup,
@@ -29,13 +29,14 @@ import { Pupil } from '../../models/student.model';
 import { Table } from '../../shared/table/table';
 import { TableCellDirective } from '../../shared/table/table-cell.directive';
 import { TableColumn } from '../../shared/table/table-column.mdel';
+import { ClickOutsideDirective } from '../../../core/directives/click-outside.directive';
 
 type ViewMode = 'grid' | 'list';
 
 @Component({
   selector: 'app-year-group-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Loader, LucideAngularModule, Table, TableCellDirective],
+  imports: [CommonModule, FormsModule, RouterLink, Loader, LucideAngularModule, Table, TableCellDirective, ClickOutsideDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './year-group-details.css',
   templateUrl: './year-group-details.html',
@@ -48,10 +49,9 @@ export class YearGroupDetails {
   readonly icons = {
     ArrowLeft, Users, Mail, ChevronRight, Search, LayoutGrid, List,
     School, UnfoldVertical, Share2, ChevronDown, Download, UserPlus,
-    Printer, Copy, Info, MapPin, Clock, ShieldCheck, SearchX,
+    Printer, Copy, Info, MapPin, Clock, ShieldCheck, SearchX,ArrowLeftRight,ChevronsUpDown
   };
 
-  /** Route param: `:yearGroupId` (e.g. "004" for Year 10) */
   readonly yearGroupId = input('');
   readonly formId = input('');
 
@@ -71,10 +71,6 @@ export class YearGroupDetails {
 
   readonly trackByAdmissionNo = (student: Pupil) => student.admissionNo;
 
-  /**
-   * The currently active year group, resolved from the route param.
-   * Null while loading or if the id isn't present in the dataset.
-   */
   readonly detail = computed<YearGroupDetail | null>(() => {
     const id = this.yearGroupId();
     const groups = this.yearGroups();
@@ -89,7 +85,6 @@ export class YearGroupDetails {
   readonly academicYears = this.buildAcademicYears();
   readonly selectedAcademicYear = signal(this.academicYears[0]);
 
-  /** Options for the year-group dropdown — excludes non-cohort groups. */
   readonly academicYearOptions = computed(() =>
     this.yearGroups().map(group => ({
       value: group.id,
@@ -99,8 +94,10 @@ export class YearGroupDetails {
 
   readonly filteredForms = computed<FormGroup[]>(() => {
     const query = this.searchQuery().toLowerCase().trim();
-    const forms = this.detail()?.forms ?? [];
+    const forms = (this.detail()?.forms ?? []).filter(form => form.tutor?.isActive && form.tutor?.id);
     if (!query) return forms;
+
+    console.log('Filtering forms with query:', query, 'from forms:', forms);
 
     return forms.filter(form =>
       form.id.toLowerCase().includes(query) ||
@@ -109,6 +106,8 @@ export class YearGroupDetails {
       form.tutor.id.toLowerCase().includes(query)
     );
   });
+
+
 
   readonly selectedForm = computed(() =>
     this.detail()?.forms.find(form => form.id === this.formId()) ?? null
@@ -197,7 +196,7 @@ export class YearGroupDetails {
     this.service.getYearGroupDetails(this.schoolId()).subscribe({
       next: (response) => {
         const formatted = response
-          .filter(this.isRealCohort)           // drop Activities / Staff
+          .filter(this.isRealCohort)
           .sort((a, b) => a.sortOrder - b.sortOrder)
           .map(group => this.formatYearGroup(group));
 
@@ -253,9 +252,18 @@ export class YearGroupDetails {
       : values.some(value => value === 'female' || value === 'f');
   }
 
+  private readonly isActiveForm = (form: YearGroupApiResponse['forms'][number]): boolean => {
+    const tutorId = String(form?.tutorId ?? '').trim();
+    const formId = String(form?.formId ?? '').trim();
+    const description = String(form?.description ?? '').trim();
+    return Boolean(tutorId) && Boolean(formId || description);
+  };
+
   /** Activities and Staff have no age/forms and aren't real cohorts. */
-  private readonly isRealCohort = (g: YearGroupApiResponse): boolean =>
-    g.ageGroup > 0 && g.forms.length > 0;
+  private readonly isRealCohort = (g: YearGroupApiResponse): boolean => {
+    const activeForms = (g.forms ?? []).filter(this.isActiveForm);
+    return g.ageGroup > 0 && activeForms.length > 0;
+  };
 
   // ─── UI actions ─────────────────────────────────────────────────────
 
@@ -306,7 +314,8 @@ export class YearGroupDetails {
   // ─── Data mapping ───────────────────────────────────────────────────
 
   private formatYearGroup(group: YearGroupApiResponse): YearGroupDetail {
-    const forms = group.forms
+    const forms = (group.forms ?? [])
+      .filter(this.isActiveForm)
       .map(form => this.formatForm(form))
       .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
@@ -356,8 +365,6 @@ export class YearGroupDetails {
 
     const hasTutor = Boolean(form.tutorId);
 
-    // The provided payload doesn't include counts; wire these up
-    // if/when the API is extended.
     const raw = form as unknown as Record<string, unknown>;
     const formName = String(raw['formName'] ?? form.description).trim();
     const enrolled = Number(raw['enrolled'] ?? raw['totalEnrolled'] ?? 0);

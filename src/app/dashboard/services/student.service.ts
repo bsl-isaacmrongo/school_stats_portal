@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { catchError, finalize, map, Observable, of, tap, throwError } from 'rxjs';
 import { environment } from '../../env';
-import { Pupil, StudentData } from '../models/student.model';
+import { Pupil, PupilAttendance, StudentData } from '../models/student.model';
 import { MOCK_DATA } from './mock-data';
 import { YearGroupApiResponse } from '../analytics/year-group-details/year-group-model';
 
@@ -66,6 +66,22 @@ export class StudentDataService {
     );
   }
 
+  getPupilClassAttendance(school: string, attendanceDate: string): Observable<PupilAttendance[]> {
+    const cacheKey = `attendance:${school}:${attendanceDate}`;
+    const cached = this.readAttendanceSession(cacheKey);
+    if (cached) return of(cached);
+
+    const date = `${attendanceDate}T00:00:00.000Z`;
+    const url = `${environment.apiUrl}/v1/attendance/GetPupilClassAttendance/${encodeURIComponent(school)}`;
+
+    return this.http.get<ApiPupil[] | ApiPupil>(url, {
+      params: { attendancedate: date },
+    }).pipe(
+      map(response => this.extractPupilList(response) as PupilAttendance[]),
+      tap(records => this.writeAttendanceSession(cacheKey, records))
+    );
+  }
+
   private mapPupil(apiPupil: ApiPupil): Pupil {
     const firstName = this.stringValue(apiPupil, 'firstName', 'forename');
     const lastName = this.stringValue(apiPupil, 'lastName', 'surname');
@@ -91,11 +107,11 @@ export class StudentDataService {
       genderCode: this.stringValue(apiPupil, 'genderCode'),
       name,
       dob: this.stringValue(apiPupil, 'dob'),
-      formName: this.stringValue(apiPupil, 'formName'),
+      formName: this.stringValue(apiPupil, 'formName', 'form', 'className', 'class'),
       yearGroupCode: this.stringValue(apiPupil, 'yearGroupCode'),
       yearGroup: this.stringValue(apiPupil, 'yearGroup'),
-      registrationGroupCode: this.stringValue(apiPupil, 'registrationGroupCode'),
-      registrationGroup: this.stringValue(apiPupil, 'registrationGroup'),
+      registrationGroupCode: this.stringValue(apiPupil, 'registrationGroupCode', 'formId', 'classId'),
+      registrationGroup: this.stringValue(apiPupil, 'registrationGroup', 'formGroup', 'classGroup'),
       houseCode: this.stringValue(apiPupil, 'houseCode'),
       house: this.stringValue(apiPupil, 'house'),
       address: this.stringValue(apiPupil, 'address'),
@@ -119,6 +135,38 @@ export class StudentDataService {
   private stringValue(value: ApiPupil, ...keys: string[]): string {
     const match = keys.map(key => value[key]).find(item => item !== null && item !== undefined);
     return match === undefined ? '' : String(match);
+  }
+
+  private extractPupilList(response: ApiPupil[] | ApiPupil): ApiPupil[] {
+    if (Array.isArray(response)) return response;
+
+    // Supports the common API envelope shapes while keeping a plain array response simple.
+    for (const key of ['data', 'items', 'result', 'pupils']) {
+      const value = response[key];
+      if (Array.isArray(value)) return value as ApiPupil[];
+    }
+    return [];
+  }
+
+  private readAttendanceSession(key: string): PupilAttendance[] | null {
+    if (typeof sessionStorage === 'undefined') return null;
+    try {
+      const stored = sessionStorage.getItem(key);
+      if (!stored) return null;
+      const records: unknown = JSON.parse(stored);
+      return Array.isArray(records) ? records as PupilAttendance[] : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeAttendanceSession(key: string, records: PupilAttendance[]): void {
+    if (typeof sessionStorage === 'undefined') return;
+    try {
+      sessionStorage.setItem(key, JSON.stringify(records));
+    } catch {
+      // A full or unavailable session store should not prevent attendance loading.
+    }
   }
 
   private booleanValue(value: ApiPupil, ...keys: string[]): boolean | undefined {

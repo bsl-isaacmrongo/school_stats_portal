@@ -1,0 +1,292 @@
+@if (loading()) {
+  <div class="min-h-[24rem] flex items-center justify-center">
+    <app-loader [size]="56" [color]="'var(--colorsUtilityMajor500)'" label="Loading year group..." />
+  </div>
+} @else if (detail(); as d) {
+  <div class="flex flex-col w-full pb-8">
+
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+      <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-1 flex-wrap">
+          <a routerLink="/dashboard"
+             class="inline-flex items-center gap-1 text-[13px] font-medium text-brandPrimary-500 hover:text-brandPrimary-600 transition-colors group">
+            <lucide-icon [img]="icons.ArrowLeft" [size]="16" class="transition-transform group-hover:-translate-x-1"></lucide-icon>
+            <span>Back to Demographic Overview</span>
+          </a>
+          <span class="text-neutralSlate-300 text-[10px]">/</span>
+          <a routerLink="/students" class="text-[13px] font-medium text-neutralSlate-500 hover:text-neutralSlate-700">Students</a>
+          <span class="text-neutralSlate-300 text-[10px]">/</span>
+          <span class="text-[13px] font-medium text-neutralSlate-500">Year Groups</span>
+          <span class="text-neutralSlate-300 text-[10px]">/</span>
+          <span class="text-[13px] font-semibold text-brandPrimary-500">{{ d.year }}</span>
+        </div>
+
+        <div class="flex items-center gap-2 mt-1">
+          <span class="text-[10px] font-semibold uppercase tracking-wider text-neutralSlate-500">Active Academic Session:</span>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-neutralSlate-100 text-neutralSlate-800 text-[10px] font-semibold">
+            <span class="w-1.5 h-1.5 rounded-full bg-brandSecondary-500"></span>
+            {{ selectedAcademicYear() }} Academic Year
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative overflow-hidden rounded-xl bg-brandPrimary-500 text-white shadow-md p-6 mb-6">
+      <div class="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-brandSecondary-500/10 blur-3xl pointer-events-none"></div>
+      <div class="absolute right-0 bottom-0 opacity-10 pointer-events-none pr-6 pb-2">
+        <lucide-icon [img]="icons.School" [size]="160"></lucide-icon>
+      </div>
+
+      <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div class="flex flex-col gap-1 max-w-2xl">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-4xl tracking-tight font-bold">{{ d.year }}</span>
+          </div>
+
+          <p class="text-base text-brandPrimary-100 mt-1">{{ d.curriculum }}</p>
+
+          <div class="flex items-center gap-3 text-xs text-brandPrimary-200 mt-2 flex-wrap">
+            <span class="flex items-center gap-1">
+              <lucide-icon [img]="icons.ShieldCheck" [size]="15" class="text-brandSecondary-400"></lucide-icon>
+              Lead Tutor: <strong class="text-white font-semibold ml-1">{{ d.headOfYear }}</strong>
+            </span>
+            <span class="w-1 h-1 rounded-full bg-white/30"></span>
+            <span class="flex items-center gap-1">
+              <lucide-icon [img]="icons.BookOpen" [size]="15"></lucide-icon>
+              Subject: <strong class="text-white font-semibold ml-1">CL1-157 (Early Literacy)</strong>
+            </span>
+            <span class="w-1 h-1 rounded-full bg-white/30"></span>
+            <span class="flex items-center gap-1">
+              <lucide-icon [img]="icons.Clock" [size]="15" class="text-brandSecondary-400"></lucide-icon>
+              Session: <strong class="text-brandSecondary-300 font-semibold ml-1">{{ selectedPeriod() }}</strong>
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-brandPrimary-700/80 backdrop-blur-md p-4 rounded-xl">
+          <div class="flex flex-col">
+            <span class="text-[10px] text-brandPrimary-200 uppercase tracking-wider">Total Forms</span>
+            <span class="text-2xl font-bold text-white">{{ totalFormsLabel() }}</span>
+            <span class="text-[10px] text-brandSecondary-300">Balanced Sections</span>
+          </div>
+          <div class="flex flex-col"></div>
+          <div class="flex flex-col"></div>
+
+          <div class="flex flex-col">
+            <span class="text-[10px] text-brandPrimary-200 uppercase tracking-wider">Form Tutors</span>
+            <span class="text-2xl font-bold text-brandSecondary-400">{{ d.formsWithTutor }} / {{ d.totalFormTutors }}</span>
+            <span class="text-[10px] text-brandSecondary-300">All Tutors Active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Tabs ═══ -->
+    <nav class="border-b border-neutralSlate-200 flex items-center justify-between gap-4 overflow-x-auto mb-4">
+      <div class="flex items-center space-x-1">
+        @for (tab of tabs; track trackByTab($index, tab)) {
+          <button type="button"
+                  (click)="setActiveTab(tab.id)"
+                  class="group inline-flex items-center gap-2 py-3 px-4 border-b-2 transition-colors"
+                  [class]="activeTab() === tab.id
+                    ? 'border-brandPrimary-500 font-semibold text-sm text-brandPrimary-500'
+                    : 'border-transparent font-medium text-sm text-neutralSlate-500 hover:text-neutralSlate-700 hover:border-neutralSlate-300'">
+            @switch (tab.id) {
+              @case ('attendance') {
+                <lucide-icon [img]="icons.ClipboardCheck" [size]="16"></lucide-icon>
+              }
+              @case ('members') {
+                <lucide-icon [img]="icons.Users" [size]="16"></lucide-icon>
+              }
+              @case ('reports') {
+                <lucide-icon [img]="icons.BarChart3" [size]="16"></lucide-icon>
+              }
+              @case ('config') {
+                <lucide-icon [img]="icons.SlidersHorizontal" [size]="16"></lucide-icon>
+              }
+            }
+            <span>{{ tab.label }}</span>
+            @if (tab.badge) {
+              <span class="text-xs font-bold px-2 py-0.5 rounded-full"
+                    [class]="activeTab() === tab.id
+                      ? 'bg-brandPrimary-100 text-brandPrimary-600'
+                      : 'bg-neutralSlate-100 text-neutralSlate-600'">
+                {{ tab.badge }}
+              </span>
+            }
+          </button>
+        }
+      </div>
+    </nav>
+
+    <!-- ═══ Attendance Controls Bar ═══ -->
+    <section class="bg-white p-4 rounded-xl shadow-sm border border-neutralSlate-200 mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Date navigator -->
+          <div class="inline-flex items-center rounded-lg border border-neutralSlate-200 bg-neutralSlate-50 p-0.5 shadow-sm">
+            <button class="p-1.5 rounded hover:bg-white text-neutralSlate-600 hover:text-neutralSlate-900 transition-colors" title="Previous Day" type="button" (click)="changeDate(-1)">
+              <lucide-icon [img]="icons.ChevronLeft" [size]="16"></lucide-icon>
+            </button>
+            <label class="relative px-3 py-1 flex items-center gap-2 bg-white rounded shadow-sm border border-neutralSlate-200/70 font-semibold text-xs text-neutralSlate-800 cursor-pointer hover:border-brandPrimary-300 transition-colors" title="Choose attendance date">
+              <lucide-icon [img]="icons.CalendarDays" [size]="16" class="text-brandPrimary-500"></lucide-icon>
+              <span>{{ selectedDate() }}</span>
+              @if (isToday()) {
+                <span class="text-[10px] bg-neutralSlate-100 text-neutralSlate-500 px-1.5 py-0.5 rounded uppercase font-bold">Today</span>
+              }
+              <input type="date"
+                     class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                     [value]="selectedDateValue()"
+                     (change)="onDateChange($any($event.target).value)"
+                     aria-label="Select attendance date">
+            </label>
+            <button class="p-1.5 rounded hover:bg-white text-neutralSlate-600 hover:text-neutralSlate-900 transition-colors" title="Next Day" type="button" (click)="changeDate(1)">
+              <lucide-icon [img]="icons.ChevronRight" [size]="16"></lucide-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ Register Table ═══ -->
+    <section class="bg-white rounded-xl shadow-sm border border-neutralSlate-200 overflow-hidden mb-4">
+      <div class="p-5 border-b border-neutralSlate-200 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h3 class="text-lg font-semibold text-neutralSlate-900">CR-B Class Register</h3>
+          <p class="text-sm text-neutralSlate-500">{{ attendanceRows().length }} students in this form</p>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+          <div class="relative w-full sm:w-72">
+            <lucide-icon [img]="icons.Search" [size]="16"
+                         class="absolute left-3 top-1/2 -translate-y-1/2 text-neutralSlate-400 pointer-events-none"></lucide-icon>
+          <input type="text"
+                   placeholder="Filter student name or ID..."
+                   [ngModel]="searchQuery()"
+                   (ngModelChange)="onSearchInput($event)"
+                   class="w-full pl-9 pr-4 py-2 bg-neutralSlate-50 text-neutralSlate-900 text-sm rounded-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-brandPrimary-500/20 border border-neutralSlate-200 transition-all placeholder:text-neutralSlate-400"/>
+          </div>
+
+          <div class="hidden sm:flex items-center border border-neutralSlate-200 rounded-lg p-0.5 bg-neutralSlate-50">
+            <button type="button" class="p-1.5 rounded bg-white shadow-sm text-brandPrimary-500" title="Table View">
+              <lucide-icon [img]="icons.List" [size]="16"></lucide-icon>
+            </button>
+            <button type="button" class="p-1.5 rounded text-neutralSlate-400 hover:text-neutralSlate-700" title="Grid Card View">
+              <lucide-icon [img]="icons.LayoutGrid" [size]="16"></lucide-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <app-table
+        [data]="filteredRows()"
+        [columns]="studentColumns"
+        [pageSize]="10"
+        [pageSizeOptions]="[10, 25, 50]"
+        [trackBy]="trackByStudent"
+        [emptyMessage]="attendanceLoading() ? 'Loading attendance…' : attendanceLoadError() ? 'Could not load attendance for this date.' : 'No attendance records found for this form on this date.'">
+
+        <!-- Row selection -->
+        <ng-template tableCell="select" let-s>
+          <input type="checkbox"
+                 class="h-4 w-4 rounded border-neutralSlate-300 text-brandPrimary-500 focus:ring-brandPrimary-500/30 cursor-pointer"
+                 [checked]="isPupilSelected(s.id)"
+                 (change)="togglePupilSelection(s.id, $any($event.target).checked)"
+                 [attr.aria-label]="'Select ' + s.name">
+        </ng-template>
+
+        <!-- Pupil ID column -->
+        <ng-template tableCell="admNo" let-s>
+          <div class="flex flex-col">
+            <span class="font-mono font-bold text-xs text-brandPrimary-500 bg-brandPrimary-50 border border-brandPrimary-100 px-1.5 py-0.5 rounded w-fit">
+              #{{ s.id }}
+            </span>
+            <span class="text-[10px] text-neutralSlate-400 font-mono mt-0.5">Adm: {{ s.admNo }}</span>
+          </div>
+        </ng-template>
+
+        <!-- Student Details column -->
+        <ng-template tableCell="name" let-s>
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full font-bold flex items-center justify-center text-xs ring-1 flex-shrink-0"
+                 [class]="s.avatarClasses">
+              {{ s.initials }}
+            </div>
+            <div>
+              <span class="font-semibold text-neutralSlate-900 text-xs block">{{ s.name }}</span>
+              <span class="text-[10px] text-neutralSlate-400">Guardian: {{ s.guardian }}</span>
+            </div>
+          </div>
+        </ng-template>
+
+        <!-- Gender -->
+        <ng-template tableCell="gender" let-s>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border"
+                [class]="s.gender === 'Female'
+                  ? 'bg-brandSecondary-50 text-brandSecondary-700 border-brandSecondary-200'
+                  : 'bg-brandPrimary-50 text-brandPrimary-700 border-brandPrimary-200'">
+            {{ s.gender }}
+          </span>
+        </ng-template>
+
+        <!-- Attendance symbol -->
+        <ng-template tableCell="attendance" let-s>
+          <div class="flex items-center gap-1.5">
+            <span class="font-mono font-bold text-xs rounded px-2 py-0.5" [class]="s.attendanceBadgeClasses">
+              {{ s.attendanceSymbol }}
+            </span>
+            <span class="font-semibold text-xs text-neutralSlate-700">{{ s.attendanceLabel }}</span>
+            <span class="text-[10px] text-neutralSlate-400 font-mono">({{ s.attendanceCode }})</span>
+          </div>
+        </ng-template>
+
+        <!-- In Attendance status -->
+        <ng-template tableCell="status" let-s>
+          @switch (s.inAttendance) {
+            @case ('No') {
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>No
+              </span>
+            }
+            @case ('Yes (Off-site)') {
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-brandPrimary-50 text-brandPrimary-700 border border-brandPrimary-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-brandPrimary-500"></span>Yes (Off-site)
+              </span>
+            }
+            @default {
+              <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-brandSecondary-50 text-brandSecondary-700 border border-brandSecondary-100">
+                <span class="w-1.5 h-1.5 rounded-full bg-brandSecondary-500"></span>Yes
+              </span>
+            }
+          }
+        </ng-template>
+
+        <!-- Authorised -->
+        <ng-template tableCell="authorised" let-s>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border"
+                [class]="s.authorised === 'Exempt (Rel)'
+                  ? 'bg-brandSecondary-50 text-brandSecondary-700 border-brandSecondary-200'
+                  : 'bg-brandPrimary-50 text-brandPrimary-700 border-brandPrimary-200'">
+            {{ s.authorised }}
+          </span>
+        </ng-template>
+
+        <!-- Comments -->
+        <ng-template tableCell="comment" let-s>
+          @if (s.comment) {
+            <span class="text-[11px] text-neutralSlate-600 whitespace-nowrap">{{ s.comment }}</span>
+          } @else {
+            <span class="text-[11px] text-neutralSlate-400">Add comment...</span>
+          }
+        </ng-template>
+
+        <!-- Row actions -->
+        <ng-template tableCell="actions" let-s>
+          <button type="button" class="p-1 text-neutralSlate-400 hover:text-brandPrimary-500 transition-colors" [attr.aria-label]="'Actions for ' + s.name">
+            <lucide-icon [img]="icons.MoreHorizontal" [size]="17"></lucide-icon>
+          </button>
+        </ng-template>
+      </app-table>
+    </section>
+  </div>
+}

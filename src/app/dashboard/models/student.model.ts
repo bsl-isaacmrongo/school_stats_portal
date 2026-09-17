@@ -60,3 +60,22 @@ export interface Pupil {
   gender: string;
   active: boolean;
 }
+
+/** Attendance response returned for one pupil and one school day. */
+export interface PupilAttendance {
+  absenceType: string;
+  attendanceDate: string;
+  attendanceSession: string | null;
+  attendanceSymbol: string;
+  batchID: string;
+  comments: string;
+  divisionID: string;
+  isAuthorised: boolean;
+  isInAttendance: boolean;
+  periodNumber: number | null;
+  pupilId: string;
+  schoolId: string;
+  subjectID: string;
+  yearGroupID: string;
+  [key: string]: unknown;
+}

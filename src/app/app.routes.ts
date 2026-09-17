@@ -26,7 +26,7 @@ export const routes: Routes = [
       },
       {
         path: 'year-group/:yearGroupId/:formId',
-        loadComponent: () => import('./dashboard/analytics/year-group-details/year-group-details').then(m => m.YearGroupDetails),
+        loadComponent: () => import('./dashboard/analytics/year-group-form-info/year-group-form-info').then(m => m.YearGroupFormInfo),
       },
     ]
   },
