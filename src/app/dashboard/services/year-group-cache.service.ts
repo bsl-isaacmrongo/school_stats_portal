@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { YearGroupDetail } from '../components/year-group-details/year-group-model';
+import { YearGroupDetail } from '../analytics/year-group-details/year-group-model';
 
 
 const STORAGE_KEY = 'bge.yearGroups.v1';

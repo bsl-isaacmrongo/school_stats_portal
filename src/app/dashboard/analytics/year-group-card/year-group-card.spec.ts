@@ -1,16 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { YearGroupChart } from './year-group-chart';
+import { YearGroupCard } from './year-group-card';
 
 describe('YearGroupChart', () => {
-  let component: YearGroupChart;
-  let fixture: ComponentFixture<YearGroupChart>;
+  let component: YearGroupCard;
+  let fixture: ComponentFixture<YearGroupCard>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [YearGroupChart],
+      imports: [YearGroupCard],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(YearGroupChart);
+    fixture = TestBed.createComponent(YearGroupCard);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

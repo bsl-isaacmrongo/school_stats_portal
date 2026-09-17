@@ -23,11 +23,11 @@ export interface YearGroupData {
 
 @Component({
   imports: [CommonModule],
-  selector: 'app-year-group-chart',
-  styleUrl: './year-group-chart.css',
-  templateUrl: './year-group-chart.html',
+  selector: 'app-year-group-card',
+  styleUrl: './year-group-card.css',
+  templateUrl: './year-group-card.html',
 })
-export class YearGroupChart {
+export class YearGroupCard {
 
   // private router = inject(Router);
 
@@ -60,6 +60,6 @@ export class YearGroupChart {
   navigateToYearGroup(): void {
     const routeKey = this.yearData.yearGroupId ?? this.yearData.year;
     if (!routeKey) return;
-    this.router.navigate(['/year-groups', routeKey]);
+    this.router.navigate(['/year-group', routeKey]);
   }
 }

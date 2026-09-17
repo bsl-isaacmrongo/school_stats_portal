@@ -4,7 +4,7 @@ import { catchError, finalize, map, Observable, of, tap, throwError } from 'rxjs
 import { environment } from '../../env';
 import { Pupil, StudentData } from '../models/student.model';
 import { MOCK_DATA } from './mock-data';
-import { YearGroupApiResponse } from '../components/year-group-details/year-group-model';
+import { YearGroupApiResponse } from '../analytics/year-group-details/year-group-model';
 
 type ApiPupil = Record<string, unknown>;
 

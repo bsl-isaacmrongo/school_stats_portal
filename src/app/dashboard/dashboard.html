@@ -157,7 +157,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         @for (year of data().yearGroups; track year.yearGroupId ?? year.year) {
-          <app-year-group-chart [yearData]="year" />
+          <app-year-group-card [yearData]="year" />
         }
       </div>
     </section>

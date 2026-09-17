@@ -4,12 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { AcademicYearStats, Pupil, StudentData } from './models/student.model';
 import { StudentDataService } from './services/student.service';
 import { AuthService } from '../auth/auth.service';
-import { MetricCard } from './components/metric-card/metric-card';
-import { YearGroupChart } from './components/year-group-chart/year-group-chart';
-import { Loader } from './components/shared/loader/loader';
+import { MetricCard } from './analytics/metric-card/metric-card';
+import { YearGroupCard } from './analytics/year-group-card/year-group-card';
+import { Loader } from './shared/loader/loader';
 
 @Component({
-  imports: [CommonModule, FormsModule, YearGroupChart, Loader],
+  imports: [CommonModule, FormsModule, YearGroupCard, Loader],
   selector: 'app-dashboard',
   styleUrl: './dashboard.css',
   templateUrl: './dashboard.html',
@@ -34,12 +34,12 @@ export class Dashboard {
 
   joinerPercentage = computed(() => {
     const total = this.totalMovement();
-    return total ? Math.round((this.movementStats().joiners / total) * 100) : 0;
+    return total ? Number(((this.movementStats().joiners / total) * 100).toFixed(2)) : 0;
   });
 
   leaverPercentage = computed(() => {
     const total = this.totalMovement();
-    return total ? Math.round((this.movementStats().leavers / total) * 100) : 0;
+    return total ? Number(((this.movementStats().leavers / total) * 100).toFixed(2)) : 0;
   });
 
   netIntake = computed(() => {
@@ -64,7 +64,7 @@ export class Dashboard {
     const total = this.data().totalStudents;
     if (!total) return 0;
     const value = gender === 'boys' ? this.data().genderBreakdown.boys : this.data().genderBreakdown.girls;
-    return Math.round((value / total) * 100);
+    return Number(((value / total) * 100).toFixed(2));
   }
 
   selectAcademicYear(year: string): void {

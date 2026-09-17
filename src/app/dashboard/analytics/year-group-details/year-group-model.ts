@@ -11,6 +11,7 @@ export interface FormTutor {
 export interface FormGroup {
   id: string;              // e.g. '10-ALPHA'
   code: string;            // e.g. 'FRM-Y10-A'
+  formName: string;        // e.g. '4B'
   name: string;            // e.g. '10 Alpha - Sciences & Advanced Mathematics Focus'
   track: string;           // e.g. 'STEM Track'
   trackVariant: 'primary' | 'neutral';

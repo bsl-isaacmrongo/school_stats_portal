@@ -5,8 +5,8 @@ import { Router } from '@angular/router';
 import { TableColumn } from '../shared/table/table-column.mdel';
 import { Table } from "../shared/table/table";
 import { TableCellDirective } from '../shared/table/table-cell.directive';
-import { Pupil } from '../../models/student.model';
-import { StudentDataService } from '../../services/student.service';
+import { Pupil } from '../models/student.model';
+import { StudentDataService } from '../services/student.service';
 import { Loader } from "../shared/loader/loader";
 import { ToastrService } from 'ngx-toastr';
 

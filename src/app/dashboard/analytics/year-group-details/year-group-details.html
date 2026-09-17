@@ -196,10 +196,34 @@
       </div>
     </div>
 
+    @if (formId() && selectedForm(); as form) {
+      <div class="bg-white rounded-xl shadow-sm border border-neutralSlate-200 overflow-hidden">
+        <div class="p-5 border-b border-neutralSlate-200">
+          <h2 class="text-lg font-semibold text-neutralSlate-900">{{ form.name }}</h2>
+          <p class="text-sm text-neutralSlate-500">{{ formStudents().length }} students in this form</p>
+        </div>
+        <app-table
+          [data]="formStudents()"
+          [columns]="studentColumns"
+          [pageSize]="10"
+          [pageSizeOptions]="[10, 25, 50]"
+          [trackBy]="trackByAdmissionNo"
+          emptyMessage="No students found for this form.">
+
+          <ng-template tableCell="status" let-student>
+            <span class="px-2.5 py-1 rounded-full text-xs font-medium"
+                  [class]="student.active ? 'bg-green-50 text-green-600' : 'bg-neutral-100 text-neutral-500'">
+              {{ student.active ? 'Active' : 'Inactive' }}
+            </span>
+          </ng-template>
+        </app-table>
+      </div>
+    } @else {
     <!-- ═══ Forms Grid ═══ -->
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
       @for (form of filteredForms(); track form.id) {
-        <div class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between border border-neutralSlate-200">
+           <div [routerLink]="['/year-group', d.id, form.id]"
+             class="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between border border-neutralSlate-200 cursor-pointer">
           <div>
             <div class="flex items-start justify-between gap-2 mb-2">
               <div class="flex flex-col">
@@ -214,20 +238,20 @@
               <div class="flex items-center justify-between text-xs mb-1.5">
                 <span class="text-neutralSlate-900 font-semibold flex items-center gap-1">
                   <lucide-icon [img]="icons.Users" [size]="15" class="text-brandPrimary-500"></lucide-icon>
-                  {{ form.enrolled }} Enrolled
+                  {{ studentCount(form) }} Students
                 </span>
                 <span class="text-neutralSlate-500">
-                  {{ form.boys }} Boys • {{ form.girls }} Girls
-                  ({{ percentage(form.boys, form.enrolled) }}/{{ percentage(form.girls, form.enrolled) }})
+                  {{ formGenderCount(form, 'boys') }} Boys • {{ formGenderCount(form, 'girls') }} Girls
+                  ({{ percentage(formGenderCount(form, 'boys'), studentCount(form)) }}/{{ percentage(formGenderCount(form, 'girls'), studentCount(form)) }})
                 </span>
               </div>
               <div class="w-full h-2 rounded-full bg-neutralSlate-200 flex overflow-hidden">
                 <div class="h-full bg-brandPrimary-500"
-                     [style.width.%]="percentage(form.boys, form.enrolled)"
-                     [title]="form.boys + ' Boys'"></div>
+                     [style.width.%]="percentage(formGenderCount(form, 'boys'), studentCount(form))"
+                     [title]="formGenderCount(form, 'boys') + ' Boys'"></div>
                 <div class="h-full bg-brandSecondary-500"
-                     [style.width.%]="percentage(form.girls, form.enrolled)"
-                     [title]="form.girls + ' Girls'"></div>
+                     [style.width.%]="percentage(formGenderCount(form, 'girls'), studentCount(form))"
+                     [title]="formGenderCount(form, 'girls') + ' Girls'"></div>
               </div>
             </div>
 
@@ -276,5 +300,6 @@
         </div>
       }
     </div>
+    }
   </div>
 }

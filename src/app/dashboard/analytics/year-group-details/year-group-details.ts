@@ -24,14 +24,18 @@ import {
 } from './year-group-model';
 import { StudentDataService } from '../../services/student.service';
 import { YearGroupCacheService } from '../../services/year-group-cache.service';
-import { Loader } from '../shared/loader/loader';
+import { Loader } from '../../shared/loader/loader';
+import { Pupil } from '../../models/student.model';
+import { Table } from '../../shared/table/table';
+import { TableCellDirective } from '../../shared/table/table-cell.directive';
+import { TableColumn } from '../../shared/table/table-column.mdel';
 
 type ViewMode = 'grid' | 'list';
 
 @Component({
   selector: 'app-year-group-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, Loader, LucideAngularModule],
+  imports: [CommonModule, FormsModule, RouterLink, Loader, LucideAngularModule, Table, TableCellDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './year-group-details.css',
   templateUrl: './year-group-details.html',
@@ -49,11 +53,23 @@ export class YearGroupDetails {
 
   /** Route param: `:yearGroupId` (e.g. "004" for Year 10) */
   readonly yearGroupId = input('');
+  readonly formId = input('');
 
   readonly schoolId = input('CL1-BGESS');
 
   readonly loading = signal(true);
   readonly yearGroups = signal<YearGroupDetail[]>([]);
+  readonly students = signal<Pupil[]>([]);
+  readonly studentsLoaded = signal(false);
+
+  readonly studentColumns: TableColumn<Pupil>[] = [
+    { key: 'admissionNo', label: 'Admission No.' },
+    { key: 'name', label: 'Name' },
+    { key: 'gender', label: 'Gender' },
+    { key: 'status', label: 'Status' },
+  ];
+
+  readonly trackByAdmissionNo = (student: Pupil) => student.admissionNo;
 
   /**
    * The currently active year group, resolved from the route param.
@@ -94,6 +110,35 @@ export class YearGroupDetails {
     );
   });
 
+  readonly selectedForm = computed(() =>
+    this.detail()?.forms.find(form => form.id === this.formId()) ?? null
+  );
+
+  readonly formStudents = computed(() => {
+    const group = this.detail();
+    const form = this.selectedForm();
+    if (!group || !form) return [];
+
+    return this.students().filter(student => this.studentBelongsToForm(student, group, form));
+  });
+
+  studentCount(form: FormGroup): number {
+    const group = this.detail();
+    if (!group || !this.studentsLoaded()) return form.enrolled;
+
+    return this.students().filter(student => this.studentBelongsToForm(student, group, form)).length;
+  }
+
+  formGenderCount(form: FormGroup, gender: 'boys' | 'girls'): number {
+    const group = this.detail();
+    if (!group || !this.studentsLoaded()) return form[gender];
+
+    return this.students()
+      .filter(student => this.studentBelongsToForm(student, group, form))
+      .filter(student => this.isGender(student, gender))
+      .length;
+  }
+
   readonly hasActiveFilter = computed(() => this.searchQuery().trim().length > 0);
 
   readonly boysPercent = computed(() => {
@@ -133,6 +178,7 @@ export class YearGroupDetails {
 
   ngOnInit(): void {
     this.load();
+    this.loadStudents();
   }
 
   // ─── Data loading ───────────────────────────────────────────────────
@@ -165,6 +211,48 @@ export class YearGroupDetails {
     });
   }
 
+  private loadStudents(): void {
+    this.service.getPupils(this.schoolId()).subscribe({
+      next: pupils => {
+        this.students.set(pupils);
+        this.studentsLoaded.set(true);
+      },
+      error: () => this.studentsLoaded.set(true),
+    });
+  }
+
+  private studentBelongsToForm(
+    student: Pupil,
+    group: YearGroupDetail,
+    form: FormGroup,
+  ): boolean {
+    const matches = (value: string, candidates: string[]) => {
+      const normalizedValue = this.normalizeKey(value);
+      return Boolean(normalizedValue) && candidates.some(candidate =>
+        normalizedValue === this.normalizeKey(candidate)
+      );
+    };
+
+    return (
+      (matches(student.yearGroupCode, [group.id]) || matches(student.yearGroup, [group.year])) &&
+      (matches(student.formName, [form.formName, form.id, form.code, form.name]) ||
+        matches(student.registrationGroupCode, [form.id, form.code, form.formName]) ||
+        matches(student.registrationGroup, [form.id, form.code, form.formName, form.name]))
+    );
+  }
+
+  private normalizeKey(value: string): string {
+    return value?.trim().replace(/\s+/g, ' ').toLowerCase();
+  }
+
+  private isGender(student: Pupil, gender: 'boys' | 'girls'): boolean {
+    const values = [student.gender, student.genderCode]
+      .map(value => value?.trim().toLowerCase());
+    return gender === 'boys'
+      ? values.some(value => value === 'male' || value === 'm')
+      : values.some(value => value === 'female' || value === 'f');
+  }
+
   /** Activities and Staff have no age/forms and aren't real cohorts. */
   private readonly isRealCohort = (g: YearGroupApiResponse): boolean =>
     g.ageGroup > 0 && g.forms.length > 0;
@@ -174,7 +262,7 @@ export class YearGroupDetails {
   onYearGroupChange(id: string): void {
     if (!id) return;
     // Navigate — route param drives the active detail via `effect`
-    this.router.navigate(['/year-groups', id]);
+    this.router.navigate(['/year-group', id]);
   }
 
   onSearchInput(value: string): void {
@@ -271,6 +359,7 @@ export class YearGroupDetails {
     // The provided payload doesn't include counts; wire these up
     // if/when the API is extended.
     const raw = form as unknown as Record<string, unknown>;
+    const formName = String(raw['formName'] ?? form.description).trim();
     const enrolled = Number(raw['enrolled'] ?? raw['totalEnrolled'] ?? 0);
     const boys = Number(raw['boys'] ?? raw['maleCount'] ?? 0);
     const girls = Number(raw['girls'] ?? raw['femaleCount'] ?? 0);
@@ -279,6 +368,7 @@ export class YearGroupDetails {
     return {
       id: form.formId,
       code: form.formId,
+      formName,
       name: form.description,
       track: 'Form group',
       trackVariant: 'neutral',
