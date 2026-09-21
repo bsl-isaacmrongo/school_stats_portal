@@ -32,6 +32,7 @@ export interface StudentAttendanceRow {
   gender: 'Male' | 'Female';
   avatarClasses: string;
   attendanceSymbol: string;
+  attendanceType: string;
   attendanceLabel: string;
   attendanceCode: string;
   attendanceBadgeClasses: string;

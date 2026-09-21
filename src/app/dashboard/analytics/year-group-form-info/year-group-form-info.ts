@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, Location } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -57,6 +57,7 @@ export class YearGroupFormInfo {
   private readonly service = inject(StudentDataService);
   private readonly cache = inject(YearGroupCacheService);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
 
   readonly icons = {
     ArrowLeft, Users, Mail, ChevronRight, ChevronLeft, ChevronDown,
@@ -84,24 +85,18 @@ export class YearGroupFormInfo {
   readonly actionsMenuOpen = signal(false);
   readonly searchQuery = signal('');
   readonly viewMode = signal<ViewMode>('list');
+  readonly pageSize = signal(10);
 
   /** ISO format keeps the value compatible with the browser's date picker. */
   readonly selectedDateValue = signal(this.toDateInputValue(new Date()));
   readonly selectedDate = computed(() => this.formatSelectedDate(this.selectedDateValue()));
   readonly isToday = computed(() => this.selectedDateValue() === this.toDateInputValue(new Date()));
   readonly selectedPeriod = signal<string>('Period 2: (09:15 - 10:00) · CL1-157');
-  readonly periods = signal<string[]>([
-    'Period 2: (09:15 - 10:00) · CL1-157',
-    'Period 1: (08:30 - 09:15) · AM Registration',
-    'Period 3: (10:15 - 11:00) · Free Play',
-    'Period 4: (11:00 - 11:45) · Creative Arts',
-    'Period 5: (13:15 - 13:45) · PM Registration',
-  ]);
+
 
   readonly academicYears = this.buildAcademicYears();
   readonly selectedAcademicYear = signal(this.academicYears[0]);
 
-  // ─── Static config (attendance codes + custom codes) ────────────────
   readonly attendanceCodes: AttendanceCode[] = [
     { code: 'CL1-1',   symbol: '/',  label: 'Present',                  colorClasses: 'bg-brandSecondary-50 border-brandSecondary-200 text-brandSecondary-800' },
     { code: 'CL1-100', symbol: 'ra', label: 'Religious Observance',     colorClasses: 'bg-brandSecondary-50 border-brandSecondary-200 text-brandSecondary-800' },
@@ -173,15 +168,20 @@ export class YearGroupFormInfo {
         : this.studentBelongsToYearGroup(p, group)
     );
 
-    const attendanceByPupilId = new Map(
-      this.attendanceRecords().map(record => [String(record.pupilId), record])
-    );
-    return pupils.map(p => this.toAttendanceRow(p, attendanceByPupilId.get(p.pupilId)));
+    const attendanceByPupilId = new Map<string, PupilAttendance>();
+    for (const record of this.attendanceRecords()) {
+      for (const key of this.attendanceKeys(record)) {
+        attendanceByPupilId.set(key, record);
+      }
+    }
+    return pupils.map(p => this.toAttendanceRow(p, this.attendanceForPupil(p, attendanceByPupilId)));
   });
 
   readonly filteredRows = computed(() => {
     const q = this.searchQuery().toLowerCase().trim();
     const rows = this.attendanceRows();
+
+    console.log('Filtering rows with query:', q, 'Total rows:', rows);
     if (!q) return rows;
     return rows.filter(r =>
       r.name.toLowerCase().includes(q) ||
@@ -189,6 +189,8 @@ export class YearGroupFormInfo {
       r.admNo.toLowerCase().includes(q)
     );
   });
+
+
 
   readonly summaryStats = computed<AttendanceSummaryStat[]>(() => {
     const rows = this.attendanceRows();
@@ -211,15 +213,15 @@ export class YearGroupFormInfo {
 
   // ─── Table columns (for app-table when a form is selected) ──────────
   readonly studentColumns: TableColumn<StudentAttendanceRow>[] = [
-    { key: 'select',     label: '', width: '36px' },
+    // { key: 'select',     label: '', width: '36px' },
     { key: 'admNo',     label: 'Pupil ID & Adm No.' },
     { key: 'name',      label: 'Student Details' },
     { key: 'gender',    label: 'Gender' },
     { key: 'attendance', label: 'Attendance' },
-    { key: 'status',    label: 'In Attendance' },
+    // { key: 'status',    label: 'In Attendance' },
     { key: 'authorised', label: 'Authorised' },
     { key: 'comment',   label: 'Comment' },
-    { key: 'actions',   label: '', width: '44px', align: 'center' },
+    // { key: 'actions',   label: '', width: '44px', align: 'center' },
   ];
 
   readonly trackByAdmissionNo = (student: Pupil) => student.admissionNo;
@@ -270,10 +272,11 @@ export class YearGroupFormInfo {
   }
 
   private loadAttendance(date: string): void {
-    this.attendanceLoading.set(true);
+    const school = this.schoolId();
+    this.attendanceLoading.set(!this.service.hasCachedAttendance(school, date));
     this.attendanceLoadError.set(false);
 
-    this.service.getPupilClassAttendance("CL1-BGESS", date).subscribe({
+    this.service.getPupilClassAttendance(school, date).subscribe({
       next: records => {
         // Form membership comes from the pupil store; attendance is joined by pupilId.
         if (date === this.selectedDateValue()) this.attendanceRecords.set(records);
@@ -367,9 +370,10 @@ export class YearGroupFormInfo {
       symbol: record?.attendanceSymbol || attendanceCode,
       label: record?.absenceType || 'Not recorded',
     };
-    const attendanceType = record?.absenceType.toLowerCase() ?? '';
+    const attendanceType = record?.absenceType?.trim() || 'Not recorded';
+    const normalizedAttendanceType = attendanceType.toLowerCase();
     const isOffSite = record?.isInAttendance === true &&
-      (attendanceType.includes('off-site') || attendanceType.includes('off site'));
+      (normalizedAttendanceType.includes('off-site') || normalizedAttendanceType.includes('off site'));
     const isAbsent = record?.isInAttendance === false;
 
     return {
@@ -382,7 +386,8 @@ export class YearGroupFormInfo {
       avatarClasses: gender === 'Female'
         ? 'bg-brandSecondary-50 text-brandSecondary-700 ring-brandSecondary-200'
         : 'bg-brandPrimary-50 text-brandPrimary-700 ring-brandPrimary-200',
-      attendanceSymbol: attendanceMeta.symbol,
+      attendanceSymbol: record?.attendanceSymbol?.trim() || attendanceMeta.symbol,
+      attendanceType,
       attendanceLabel: attendanceMeta.label,
       attendanceCode: attendanceMeta.code,
       attendanceBadgeClasses: this.badgeForCode(attendanceMeta.code),
@@ -392,10 +397,38 @@ export class YearGroupFormInfo {
     };
   }
 
+  private attendanceForPupil(
+    pupil: Pupil,
+    attendanceByPupilId: Map<string, PupilAttendance>,
+  ): PupilAttendance | undefined {
+    const raw = pupil as Record<string, unknown>;
+    const pupilKeys = [
+      pupil.pupilId,
+      raw['studentId'],
+      pupil.admissionNo,
+      pupil.pupilCode,
+      raw['id'],
+    ]
+      .map(value => String(value ?? '').trim())
+      .filter(Boolean);
+
+    return pupilKeys
+      .map(key => attendanceByPupilId.get(key))
+      .find((record): record is PupilAttendance => Boolean(record));
+  }
+
+  private attendanceKeys(record: PupilAttendance): string[] {
+    const raw = record as Record<string, unknown>;
+    return [raw['pupilId'], raw['studentId'], raw['id']]
+      .map(value => String(value ?? '').trim())
+      .filter(Boolean);
+  }
+
   private attendanceCodeFor(record?: PupilAttendance): string {
     if (!record) return 'Not recorded';
-    if (record.absenceType === 'Present' || record.attendanceSymbol === '/') return 'CL1-1';
-    const type = record.absenceType.trim().toLowerCase();
+    const absenceType = record.absenceType?.trim() ?? '';
+    if (absenceType.toLowerCase() === 'present' || record.attendanceSymbol === '/') return 'CL1-1';
+    const type = absenceType.toLowerCase();
     if (type.includes('religious')) return 'CL1-100';
     if (type.includes('education') || type.includes('edu ')) return 'CL1-101';
     if (type.includes('off-site') || type.includes('off site')) return 'CL1-104';
@@ -539,6 +572,10 @@ export class YearGroupFormInfo {
   clearFilter(): void                    { this.searchQuery.set(''); }
   setViewMode(mode: ViewMode): void      { this.viewMode.set(mode); }
 
+  changePageSize(pageSize: number): void {
+    if (pageSize > 0) this.pageSize.set(pageSize);
+  }
+
   isPupilSelected(id: string): boolean { return this.selectedPupilIds().has(id); }
 
   togglePupilSelection(id: string, selected: boolean): void {
@@ -568,6 +605,15 @@ export class YearGroupFormInfo {
   onYearGroupChange(id: string): void {
     if (!id) return;
     this.router.navigate(['/year-group', id, 'info']);
+  }
+
+  goBack(): void {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      this.location.back();
+      return;
+    }
+
+    void this.router.navigate(['/dashboard']);
   }
 
   async copyYearGroupId(): Promise<void> {

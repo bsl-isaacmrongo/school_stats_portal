@@ -66,10 +66,11 @@ export class StudentDataService {
     );
   }
 
-  getPupilClassAttendance(school: string, attendanceDate: string): Observable<PupilAttendance[]> {
-    const cacheKey = `attendance:${school}:${attendanceDate}`;
+  getPupilClassAttendance(school = 'CL1-BGESS', attendanceDate: string): Observable<PupilAttendance[]> {
+    const cacheKey = `attendance:v2:${school}:${attendanceDate}`;
     const cached = this.readAttendanceSession(cacheKey);
-    if (cached) return of(cached);
+    if (cached?.length) return of(cached);
+    if (cached) this.clearAttendanceSession(cacheKey);
 
     const date = `${attendanceDate}T00:00:00.000Z`;
     const url = `${environment.apiUrl}/v1/attendance/GetPupilClassAttendance/${encodeURIComponent(school)}`;
@@ -77,9 +78,13 @@ export class StudentDataService {
     return this.http.get<ApiPupil[] | ApiPupil>(url, {
       params: { attendancedate: date },
     }).pipe(
-      map(response => this.extractPupilList(response) as PupilAttendance[]),
+      map(response => this.extractPupilList(response).map(record => this.mapAttendance(record))),
       tap(records => this.writeAttendanceSession(cacheKey, records))
     );
+  }
+
+  hasCachedAttendance(school: string, attendanceDate: string): boolean {
+    return Boolean(this.readAttendanceSession(`attendance:v2:${school}:${attendanceDate}`)?.length);
   }
 
   private mapPupil(apiPupil: ApiPupil): Pupil {
@@ -141,11 +146,36 @@ export class StudentDataService {
     if (Array.isArray(response)) return response;
 
     // Supports the common API envelope shapes while keeping a plain array response simple.
-    for (const key of ['data', 'items', 'result', 'pupils']) {
+    for (const key of Object.keys(response)) {
+      if (!['data', 'items', 'result', 'pupils', 'attendance', 'records'].includes(key.toLowerCase())) continue;
       const value = response[key];
-      if (Array.isArray(value)) return value as ApiPupil[];
+      if (Array.isArray(value)) return value.filter(this.isApiRecord);
     }
     return [];
+  }
+
+  private mapAttendance(record: ApiPupil): PupilAttendance {
+    return {
+      ...record,
+      absenceType: this.stringValue(record, 'absenceType', 'absence_type', 'attendanceType'),
+      attendanceDate: this.stringValue(record, 'attendanceDate', 'attendance_date'),
+      attendanceSession: this.stringValue(record, 'attendanceSession', 'attendance_session') || null,
+      attendanceSymbol: this.stringValue(record, 'attendanceSymbol', 'attendance_symbol', 'symbol'),
+      batchID: this.stringValue(record, 'batchID', 'batchId', 'batch_id'),
+      comments: this.stringValue(record, 'comments', 'comment'),
+      divisionID: this.stringValue(record, 'divisionID', 'divisionId', 'division_id'),
+      isAuthorised: this.booleanValue(record, 'isAuthorised', 'isAuthorized', 'authorised') ?? false,
+      isInAttendance: this.booleanValue(record, 'isInAttendance', 'inAttendance') ?? false,
+      periodNumber: Number(record['periodNumber'] ?? record['period_number'] ?? 0) || null,
+      pupilId: this.stringValue(record, 'pupilId', 'pupilID', 'studentId', 'studentID', 'id'),
+      schoolId: this.stringValue(record, 'schoolId', 'schoolID'),
+      subjectID: this.stringValue(record, 'subjectID', 'subjectId', 'subject_id'),
+      yearGroupID: this.stringValue(record, 'yearGroupID', 'yearGroupId', 'year_group_id'),
+    };
+  }
+
+  private isApiRecord(value: unknown): value is ApiPupil {
+    return typeof value === 'object' && value !== null;
   }
 
   private readAttendanceSession(key: string): PupilAttendance[] | null {
@@ -166,6 +196,15 @@ export class StudentDataService {
       sessionStorage.setItem(key, JSON.stringify(records));
     } catch {
       // A full or unavailable session store should not prevent attendance loading.
+    }
+  }
+
+  private clearAttendanceSession(key: string): void {
+    if (typeof sessionStorage === 'undefined') return;
+    try {
+      sessionStorage.removeItem(key);
+    } catch {
+      // An unavailable session store should not prevent attendance loading.
     }
   }
 

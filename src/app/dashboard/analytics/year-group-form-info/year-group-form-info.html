@@ -8,11 +8,12 @@
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
       <div class="flex flex-col gap-1">
         <div class="flex items-center gap-1 flex-wrap">
-          <a routerLink="/dashboard"
-             class="inline-flex items-center gap-1 text-[13px] font-medium text-brandPrimary-500 hover:text-brandPrimary-600 transition-colors group">
+          <button type="button"
+             (click)="goBack()"
+             class="inline-flex cursor-pointer items-center gap-1 text-[13px] font-medium text-brandPrimary-500 hover:text-brandPrimary-600 transition-colors group">
             <lucide-icon [img]="icons.ArrowLeft" [size]="16" class="transition-transform group-hover:-translate-x-1"></lucide-icon>
-            <span>Back to Demographic Overview</span>
-          </a>
+            <span>Back to Previous Page</span>
+          </button>
           <span class="text-neutralSlate-300 text-[10px]">/</span>
           <a routerLink="/students" class="text-[13px] font-medium text-neutralSlate-500 hover:text-neutralSlate-700">Students</a>
           <span class="text-neutralSlate-300 text-[10px]">/</span>
@@ -178,22 +179,23 @@
         </div>
       </div>
 
-      <app-table
-        [data]="filteredRows()"
-        [columns]="studentColumns"
-        [pageSize]="10"
-        [pageSizeOptions]="[10, 25, 50]"
-        [trackBy]="trackByStudent"
-        [emptyMessage]="attendanceLoading() ? 'Loading attendance…' : attendanceLoadError() ? 'Could not load attendance for this date.' : 'No attendance records found for this form on this date.'">
+      <div class="relative">
+        @if (attendanceLoading()) {
+          <div class="absolute inset-0 z-10 flex items-center justify-center bg-white/75 backdrop-blur-[1px]"
+               aria-live="polite"
+               aria-label="Loading attendance">
+            <app-loader [size]="40" [thickness]="5" label="Loading attendance..." />
+          </div>
+        }
 
-        <!-- Row selection -->
-        <ng-template tableCell="select" let-s>
-          <input type="checkbox"
-                 class="h-4 w-4 rounded border-neutralSlate-300 text-brandPrimary-500 focus:ring-brandPrimary-500/30 cursor-pointer"
-                 [checked]="isPupilSelected(s.id)"
-                 (change)="togglePupilSelection(s.id, $any($event.target).checked)"
-                 [attr.aria-label]="'Select ' + s.name">
-        </ng-template>
+        <app-table
+          [data]="filteredRows()"
+          [columns]="studentColumns"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="[10, 25, 50]"
+          (pageSizeChanged)="changePageSize($event)"
+          [trackBy]="trackByStudent"
+          [emptyMessage]="attendanceLoading() ? 'Loading attendance…' : attendanceLoadError() ? 'Could not load attendance for this date.' : 'No attendance records found for this form on this date.'">
 
         <!-- Pupil ID column -->
         <ng-template tableCell="admNo" let-s>
@@ -214,7 +216,6 @@
             </div>
             <div>
               <span class="font-semibold text-neutralSlate-900 text-xs block">{{ s.name }}</span>
-              <span class="text-[10px] text-neutralSlate-400">Guardian: {{ s.guardian }}</span>
             </div>
           </div>
         </ng-template>
@@ -235,13 +236,13 @@
             <span class="font-mono font-bold text-xs rounded px-2 py-0.5" [class]="s.attendanceBadgeClasses">
               {{ s.attendanceSymbol }}
             </span>
-            <span class="font-semibold text-xs text-neutralSlate-700">{{ s.attendanceLabel }}</span>
-            <span class="text-[10px] text-neutralSlate-400 font-mono">({{ s.attendanceCode }})</span>
+            <span class="font-semibold text-xs text-neutralSlate-700">{{ s.attendanceType }}</span>
+            <!-- <span class="text-[10px] text-neutralSlate-400 font-mono">({{ s.attendanceCode }})</span> -->
           </div>
         </ng-template>
 
         <!-- In Attendance status -->
-        <ng-template tableCell="status" let-s>
+        <!-- <ng-template tableCell="status" let-s>
           @switch (s.inAttendance) {
             @case ('No') {
               <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">
@@ -259,7 +260,7 @@
               </span>
             }
           }
-        </ng-template>
+        </ng-template> -->
 
         <!-- Authorised -->
         <ng-template tableCell="authorised" let-s>
@@ -276,17 +277,11 @@
           @if (s.comment) {
             <span class="text-[11px] text-neutralSlate-600 whitespace-nowrap">{{ s.comment }}</span>
           } @else {
-            <span class="text-[11px] text-neutralSlate-400">Add comment...</span>
+            <span class="text-[11px] text-neutralSlate-400">{{s.comment ? s.comment : 'No comment...'}}</span>
           }
         </ng-template>
-
-        <!-- Row actions -->
-        <ng-template tableCell="actions" let-s>
-          <button type="button" class="p-1 text-neutralSlate-400 hover:text-brandPrimary-500 transition-colors" [attr.aria-label]="'Actions for ' + s.name">
-            <lucide-icon [img]="icons.MoreHorizontal" [size]="17"></lucide-icon>
-          </button>
-        </ng-template>
-      </app-table>
+        </app-table>
+      </div>
     </section>
   </div>
 }
