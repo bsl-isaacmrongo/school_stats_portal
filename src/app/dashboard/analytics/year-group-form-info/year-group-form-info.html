@@ -41,7 +41,7 @@
       <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div class="flex flex-col gap-1 max-w-2xl">
           <div class="flex items-center gap-2 flex-wrap">
-            <span class="text-4xl tracking-tight font-bold">{{ d.year }}</span>
+            <span class="text-4xl tracking-tight font-bold">{{ d.year }} - {{ selectedForm()?.name || 'N/A' }}</span>
           </div>
 
           <p class="text-base text-brandPrimary-100 mt-1">{{ d.curriculum }}</p>
@@ -49,7 +49,7 @@
           <div class="flex items-center gap-3 text-xs text-brandPrimary-200 mt-2 flex-wrap">
             <span class="flex items-center gap-1">
               <lucide-icon [img]="icons.ShieldCheck" [size]="15" class="text-brandSecondary-400"></lucide-icon>
-              Lead Tutor: <strong class="text-white font-semibold ml-1">{{ d.headOfYear }}</strong>
+              Number of Pupils: <strong class="text-white font-semibold ml-1">{{ attendanceRows().length }}</strong>
             </span>
             <span class="w-1 h-1 rounded-full bg-white/30"></span>
             <span class="flex items-center gap-1">
@@ -83,7 +83,7 @@
     </div>
 
     <!-- ═══ Tabs ═══ -->
-    <nav class="border-b border-neutralSlate-200 flex items-center justify-between gap-4 overflow-x-auto mb-4">
+    <!-- <nav class="border-b border-neutralSlate-200 flex items-center justify-between gap-4 overflow-x-auto mb-4">
       <div class="flex items-center space-x-1">
         @for (tab of tabs; track trackByTab($index, tab)) {
           <button type="button"
@@ -118,7 +118,7 @@
           </button>
         }
       </div>
-    </nav>
+    </nav> -->
 
     <!-- ═══ Attendance Controls Bar ═══ -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-neutralSlate-200 mb-4">
@@ -151,9 +151,9 @@
 
     <!-- ═══ Register Table ═══ -->
     <section class="bg-white rounded-xl shadow-sm border border-neutralSlate-200 overflow-hidden mb-4">
-      <div class="p-5 border-b border-neutralSlate-200 flex flex-wrap items-center justify-between gap-3">
+      <!-- <div class="p-5 border-b border-neutralSlate-200 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 class="text-lg font-semibold text-neutralSlate-900">CR-B Class Register</h3>
+          <h3 class="text-lg font-semibold text-neutralSlate-900">{{ selectedForm()?.name || 'Class' }} Attendance</h3>
           <p class="text-sm text-neutralSlate-500">{{ attendanceRows().length }} students in this form</p>
         </div>
 
@@ -177,7 +177,7 @@
             </button>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <div class="relative">
         @if (attendanceLoading()) {

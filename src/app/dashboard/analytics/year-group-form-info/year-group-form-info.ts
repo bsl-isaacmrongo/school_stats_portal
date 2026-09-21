@@ -67,12 +67,10 @@ export class YearGroupFormInfo {
     Save, CheckCircle2, BookOpen, CalendarDays, MoreHorizontal,
   };
 
-  // ─── Route inputs (same convention as YearGroupDetails) ─────────────
   readonly yearGroupId = input('');
   readonly formId = input('');
   readonly schoolId = input('CL1-BGESS');
 
-  // ─── State ──────────────────────────────────────────────────────────
   readonly loading = signal(true);
   readonly yearGroups = signal<YearGroupDetail[]>([]);
   readonly students = signal<Pupil[]>([]);
@@ -87,7 +85,6 @@ export class YearGroupFormInfo {
   readonly viewMode = signal<ViewMode>('list');
   readonly pageSize = signal(10);
 
-  /** ISO format keeps the value compatible with the browser's date picker. */
   readonly selectedDateValue = signal(this.toDateInputValue(new Date()));
   readonly selectedDate = computed(() => this.formatSelectedDate(this.selectedDateValue()));
   readonly isToday = computed(() => this.selectedDateValue() === this.toDateInputValue(new Date()));
@@ -96,6 +93,7 @@ export class YearGroupFormInfo {
 
   readonly academicYears = this.buildAcademicYears();
   readonly selectedAcademicYear = signal(this.academicYears[0]);
+
 
   readonly attendanceCodes: AttendanceCode[] = [
     { code: 'CL1-1',   symbol: '/',  label: 'Present',                  colorClasses: 'bg-brandSecondary-50 border-brandSecondary-200 text-brandSecondary-800' },
@@ -117,7 +115,6 @@ export class YearGroupFormInfo {
     { id: 'members',    label: 'Class Members',             badge: '8' },
   ];
 
-  // ─── Resolved detail (mirrors YearGroupDetails) ─────────────────────
   readonly detail = computed<YearGroupDetail | null>(() => {
     const id = this.yearGroupId();
     const groups = this.yearGroups();
@@ -125,15 +122,20 @@ export class YearGroupFormInfo {
     return groups.find(g => g.id === id || g.year === id) ?? groups[0] ?? null;
   });
 
-  readonly selectedForm = computed<FormGroup | null>(() =>
-    this.detail()?.forms.find(f => f.id === this.formId()) ?? null
-  );
+  readonly selectedForm = computed<FormGroup | null>(() => {
+    const formId = this.normalizeKey(this.formId());
+    if (!formId) return null;
+
+    return this.detail()?.forms.find(form =>
+      [form.id, form.code, form.name, form.formName]
+        .some(value => this.normalizeKey(value) === formId)
+    ) ?? null;
+  });
 
   readonly academicYearOptions = computed(() =>
     this.yearGroups().map(g => ({ value: g.id, label: g.year }))
   );
 
-  // ─── Derived stats (match the hero banner) ──────────────────────────
   readonly totalFormsLabel = computed(() =>
     (this.detail()?.totalForms ?? 0).toString().padStart(2, '0')
   );
@@ -156,7 +158,6 @@ export class YearGroupFormInfo {
     return Math.round((d.totalEnrolled / d.capacity) * 1000) / 10;
   });
 
-  // ─── Attendance rows: map Pupil → StudentAttendanceRow ──────────────
   readonly attendanceRows = computed<StudentAttendanceRow[]>(() => {
     const group = this.detail();
     const form = this.selectedForm();
@@ -211,7 +212,6 @@ export class YearGroupFormInfo {
     return `${n} / ${n} Marked (100%)`;
   });
 
-  // ─── Table columns (for app-table when a form is selected) ──────────
   readonly studentColumns: TableColumn<StudentAttendanceRow>[] = [
     // { key: 'select',     label: '', width: '36px' },
     { key: 'admNo',     label: 'Pupil ID & Adm No.' },
@@ -230,7 +230,6 @@ export class YearGroupFormInfo {
   readonly trackByTab = (_: number, tab: { id: AttendanceTab; label: string; badge?: string }) => tab.id;
   readonly trackByStudent = (student: StudentAttendanceRow) => student.id;
 
-  // ─── Lifecycle ──────────────────────────────────────────────────────
   constructor() {
     effect(() => {
       // Reset transient UI when active group changes
@@ -246,7 +245,6 @@ export class YearGroupFormInfo {
     this.loadAttendance(this.selectedDateValue());
   }
 
-  // ─── Data loading (identical pattern to YearGroupDetails) ───────────
   private load(): void {
     const cached = this.cache.read();
     if (cached?.length) {

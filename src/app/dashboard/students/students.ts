@@ -52,7 +52,7 @@ export class Students {
     { key: 'yearGroup', label: 'Year Group' },
     { key: 'gender', label: 'Gender' },
     { key: 'status', label: 'Status' },
-    { key: 'actions', label: 'Actions', align: 'right' },
+    // { key: 'actions', label: 'Actions', align: 'right' },
   ];
 
   trackByAdmissionNo = (s: Pupil) => s.admissionNo;
