@@ -25,7 +25,7 @@ import { Loader } from '../../shared/loader/loader';
 import { Table } from '../../shared/table/table';
 import { TableCellDirective } from '../../shared/table/table-cell.directive';
 import { TableColumn } from '../../shared/table/table-column.mdel';
-import { Pupil, PupilAttendance } from '../../models/student.model';
+import { Pupil, PupilAttendance, YearGroupSubject } from '../../models/student.model';
 import { FormGroup, YearGroupApiResponse, YearGroupDetail } from '../year-group-details/year-group-model';
 
 import {
@@ -74,10 +74,12 @@ export class YearGroupFormInfo {
   readonly loading = signal(true);
   readonly yearGroups = signal<YearGroupDetail[]>([]);
   readonly students = signal<Pupil[]>([]);
+  readonly yearGroupSubjects = signal<YearGroupSubject[]>([]);
   readonly attendanceRecords = signal<PupilAttendance[]>([]);
   readonly selectedPupilIds = signal<Set<string>>(new Set());
   readonly attendanceLoading = signal(false);
   readonly attendanceLoadError = signal(false);
+  readonly selectedSubjectId = signal('');
 
   readonly activeTab = signal<AttendanceTab>('attendance');
   readonly actionsMenuOpen = signal(false);
@@ -132,6 +134,20 @@ export class YearGroupFormInfo {
     ) ?? null;
   });
 
+  readonly subjectOptions = computed<YearGroupSubject[]>(() => {
+    const subjects = new Map<string, YearGroupSubject>();
+    for (const subject of this.relevantYearGroupSubjects()) {
+      if (subject.isActive && subject.subject.subjectId && !subjects.has(subject.subject.subjectId)) {
+        subjects.set(subject.subject.subjectId, subject);
+      }
+    }
+    return [...subjects.values()].sort((a, b) => a.subject.name.localeCompare(b.subject.name));
+  });
+
+  readonly selectedSubject = computed(() =>
+    this.subjectOptions().find(subject => subject.subject.subjectId === this.selectedSubjectId()) ?? null
+  );
+
   readonly academicYearOptions = computed(() =>
     this.yearGroups().map(g => ({ value: g.id, label: g.year }))
   );
@@ -170,7 +186,9 @@ export class YearGroupFormInfo {
     );
 
     const attendanceByPupilId = new Map<string, PupilAttendance>();
-    for (const record of this.attendanceRecords()) {
+    for (const record of this.attendanceRecords().filter(record =>
+      record.subjectID === this.selectedSubjectId()
+    )) {
       for (const key of this.attendanceKeys(record)) {
         attendanceByPupilId.set(key, record);
       }
@@ -236,12 +254,17 @@ export class YearGroupFormInfo {
       void this.detail();
       // this.searchQuery.set('');
       // this.actionsMenuOpen.set(false);
+      const options = this.subjectOptions();
+      if (options.length && !options.some(subject => subject.subject.subjectId === this.selectedSubjectId())) {
+        this.selectedSubjectId.set(options[0].subject.subjectId);
+      }
     });
   }
 
   ngOnInit(): void {
     this.load();
     this.loadStudents();
+    this.loadYearGroupSubjects();
     this.loadAttendance(this.selectedDateValue());
   }
 
@@ -277,7 +300,9 @@ export class YearGroupFormInfo {
     this.service.getPupilClassAttendance(school, date).subscribe({
       next: records => {
         // Form membership comes from the pupil store; attendance is joined by pupilId.
-        if (date === this.selectedDateValue()) this.attendanceRecords.set(records);
+        if (date === this.selectedDateValue()) {
+          this.attendanceRecords.set(records);
+        }
       },
       error: () => {
         if (date === this.selectedDateValue()) {
@@ -297,6 +322,25 @@ export class YearGroupFormInfo {
       next: pupils => this.students.set(pupils),
       error: () => this.students.set([]),
     });
+  }
+
+  private loadYearGroupSubjects(): void {
+    this.service.getYearGroupSubjects(this.schoolCode()).subscribe({
+      next: subjects => this.yearGroupSubjects.set(subjects),
+      error: () => this.yearGroupSubjects.set([]),
+    });
+  }
+
+  private schoolCode(): string {
+    return this.schoolId()?.split('-')[0] || 'CL1-BGESS';
+  }
+
+  private relevantYearGroupSubjects(): YearGroupSubject[] {
+    const subjects = this.yearGroupSubjects();
+    const group = this.detail();
+    if (!group) return subjects;
+    const matches = subjects.filter(subject => this.normalizeKey(subject.yearGroup) === this.normalizeKey(group.id));
+    return matches.length ? matches : subjects;
   }
 
   // ─── Filtering helpers (copied from YearGroupDetails) ───────────────
@@ -567,6 +611,7 @@ export class YearGroupFormInfo {
   toggleActionsMenu(): void              { this.actionsMenuOpen.update(v => !v); }
   closeActionsMenu(): void               { this.actionsMenuOpen.set(false); }
   onSearchInput(value: string): void     { this.searchQuery.set(value); }
+  onSubjectChange(subjectId: string): void { this.selectedSubjectId.set(subjectId); }
   clearFilter(): void                    { this.searchQuery.set(''); }
   setViewMode(mode: ViewMode): void      { this.viewMode.set(mode); }
 

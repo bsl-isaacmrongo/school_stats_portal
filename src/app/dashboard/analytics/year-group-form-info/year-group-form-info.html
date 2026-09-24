@@ -54,7 +54,7 @@
             <span class="w-1 h-1 rounded-full bg-white/30"></span>
             <span class="flex items-center gap-1">
               <lucide-icon [img]="icons.BookOpen" [size]="15"></lucide-icon>
-              Subject: <strong class="text-white font-semibold ml-1">CL1-157 (Early Literacy)</strong>
+              Subject: <strong class="text-white font-semibold ml-1">{{ selectedSubject()?.subject.name || 'N/A' }}</strong>
             </span>
             <span class="w-1 h-1 rounded-full bg-white/30"></span>
             <span class="flex items-center gap-1">
@@ -145,6 +145,28 @@
               <lucide-icon [img]="icons.ChevronRight" [size]="16"></lucide-icon>
             </button>
           </div>
+
+          <label class="inline-flex items-center gap-2 rounded-lg border border-neutralSlate-200 bg-neutralSlate-50 px-3 py-1.5 text-xs font-semibold text-neutralSlate-700">
+            <span class="text-neutralSlate-500">Subject</span>
+            <select
+              class="min-w-36 bg-transparent font-semibold text-neutralSlate-900 outline-none"
+              [value]="selectedSubjectId()"
+              (change)="onSubjectChange($any($event.target).value)"
+              [disabled]="!subjectOptions().length"
+              aria-label="Select attendance subject">
+              @for (subject of subjectOptions(); track subject.subject.subjectId) {
+                <option [value]="subject.subject.subjectId">{{ subject.subject.name }} ({{ subject.subject.subjectId }})</option>
+              }
+            </select>
+          </label>
+
+          @if (selectedSubject(); as subject) {
+            <span class="text-xs text-neutralSlate-500">
+              {{ subject.yearGroupName }}
+              @if (subject.isExaminable) { · Examinable }
+              @if (subject.marksheetWeightingPercentage) { · {{ subject.marksheetWeightingPercentage }}% weighting }
+            </span>
+          }
         </div>
       </div>
     </section>

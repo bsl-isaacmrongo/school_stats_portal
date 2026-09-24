@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { catchError, finalize, map, Observable, of, tap, throwError } from 'rxjs';
 import { environment } from '../../env';
-import { Pupil, PupilAttendance, StudentData } from '../models/student.model';
+import { Pupil, PupilAttendance, StudentData, YearGroupSubject } from '../models/student.model';
 import { MOCK_DATA } from './mock-data';
 import { YearGroupApiResponse } from '../analytics/year-group-details/year-group-model';
 
@@ -80,6 +80,19 @@ export class StudentDataService {
     }).pipe(
       map(response => this.extractPupilList(response).map(record => this.mapAttendance(record))),
       tap(records => this.writeAttendanceSession(cacheKey, records))
+    );
+  }
+
+  getYearGroupSubjects(schoolCode = 'CL1-BGESS'): Observable<YearGroupSubject[]> {
+    const cacheKey = `year-group-subjects:v1:${schoolCode}`;
+    const cached = this.readYearGroupSubjectsSession(cacheKey);
+    if (cached) return of(cached);
+
+    return this.http.get<ApiPupil[]>(
+      `${environment.apiUrl}/v1/curriculum/getyeargroupsubjects/${encodeURIComponent(schoolCode)}`
+    ).pipe(
+      map(response => response.map(record => this.mapYearGroupSubject(record))),
+      tap(records => this.writeYearGroupSubjectsSession(cacheKey, records))
     );
   }
 
@@ -174,6 +187,26 @@ export class StudentDataService {
     };
   }
 
+  private mapYearGroupSubject(record: ApiPupil): YearGroupSubject {
+    const subject = this.isApiRecord(record['subject']) ? record['subject'] : {};
+    return {
+      ...record,
+      schoolId: this.stringValue(record, 'schoolId', 'schoolID'),
+      yearGroup: this.stringValue(record, 'yearGroup', 'yearGroupID', 'yearGroupId'),
+      yearGroupName: this.stringValue(record, 'yearGroupName'),
+      subject: {
+        subjectId: this.stringValue(subject, 'subjectId', 'subjectID'),
+        name: this.stringValue(subject, 'name', 'subjectName'),
+        notes: this.stringValue(subject, 'notes'),
+      },
+      isActive: this.booleanValue(record, 'isActive', 'active') ?? false,
+      marksheetWeightingPercentage: this.numberValue(record, 'marksheetWeightingPercentage') ?? 0,
+      subjectHead: this.stringValue(record, 'subjectHead'),
+      isExaminable: this.booleanValue(record, 'isExaminable') ?? false,
+      divisions: Array.isArray(record['divisions']) ? record['divisions'] : null,
+    };
+  }
+
   private isApiRecord(value: unknown): value is ApiPupil {
     return typeof value === 'object' && value !== null;
   }
@@ -187,6 +220,27 @@ export class StudentDataService {
       return Array.isArray(records) ? records as PupilAttendance[] : null;
     } catch {
       return null;
+    }
+  }
+
+  private readYearGroupSubjectsSession(key: string): YearGroupSubject[] | null {
+    if (typeof sessionStorage === 'undefined') return null;
+    try {
+      const stored = sessionStorage.getItem(key);
+      if (!stored) return null;
+      const records: unknown = JSON.parse(stored);
+      return Array.isArray(records) ? records as YearGroupSubject[] : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private writeYearGroupSubjectsSession(key: string, records: YearGroupSubject[]): void {
+    if (typeof sessionStorage === 'undefined') return;
+    try {
+      sessionStorage.setItem(key, JSON.stringify(records));
+    } catch {
+      // A full or unavailable session store should not prevent class loading.
     }
   }
 
@@ -213,5 +267,12 @@ export class StudentDataService {
     if (match === undefined) return undefined;
     if (typeof match === 'boolean') return match;
     return String(match).toLowerCase() === 'true';
+  }
+
+  private numberValue(value: ApiPupil, ...keys: string[]): number | null {
+    const match = keys.map(key => value[key]).find(item => item !== null && item !== undefined);
+    if (match === undefined || match === '') return null;
+    const number = Number(match);
+    return Number.isFinite(number) ? number : null;
   }
 }
