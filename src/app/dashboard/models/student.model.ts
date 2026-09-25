@@ -79,3 +79,20 @@ export interface PupilAttendance {
   yearGroupID: string;
   [key: string]: unknown;
 }
+
+export interface YearGroupSubject {
+  schoolId: string;
+  yearGroup: string;
+  yearGroupName: string;
+  subject: {
+    subjectId: string;
+    name: string;
+    notes: string;
+  };
+  isActive: boolean;
+  marksheetWeightingPercentage: number;
+  subjectHead: string;
+  isExaminable: boolean;
+  divisions: unknown[] | null;
+  [key: string]: unknown;
+}
