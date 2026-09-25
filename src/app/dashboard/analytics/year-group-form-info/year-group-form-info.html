@@ -54,13 +54,13 @@
             <span class="w-1 h-1 rounded-full bg-white/30"></span>
             <span class="flex items-center gap-1">
               <lucide-icon [img]="icons.BookOpen" [size]="15"></lucide-icon>
-              Subject: <strong class="text-white font-semibold ml-1">CL1-157 (Early Literacy)</strong>
+              Subject: <strong class="text-white font-semibold ml-1">{{ selectedSubject()?.subject.name || 'N/A' }}</strong>
             </span>
-            <span class="w-1 h-1 rounded-full bg-white/30"></span>
-            <span class="flex items-center gap-1">
+            <!-- <span class="w-1 h-1 rounded-full bg-white/30"></span> -->
+            <!-- <span class="flex items-center gap-1">
               <lucide-icon [img]="icons.Clock" [size]="15" class="text-brandSecondary-400"></lucide-icon>
               Session: <strong class="text-brandSecondary-300 font-semibold ml-1">{{ selectedPeriod() }}</strong>
-            </span>
+            </span> -->
           </div>
         </div>
 
@@ -81,44 +81,6 @@
         </div>
       </div>
     </div>
-
-    <!-- ═══ Tabs ═══ -->
-    <!-- <nav class="border-b border-neutralSlate-200 flex items-center justify-between gap-4 overflow-x-auto mb-4">
-      <div class="flex items-center space-x-1">
-        @for (tab of tabs; track trackByTab($index, tab)) {
-          <button type="button"
-                  (click)="setActiveTab(tab.id)"
-                  class="group inline-flex items-center gap-2 py-3 px-4 border-b-2 transition-colors"
-                  [class]="activeTab() === tab.id
-                    ? 'border-brandPrimary-500 font-semibold text-sm text-brandPrimary-500'
-                    : 'border-transparent font-medium text-sm text-neutralSlate-500 hover:text-neutralSlate-700 hover:border-neutralSlate-300'">
-            @switch (tab.id) {
-              @case ('attendance') {
-                <lucide-icon [img]="icons.ClipboardCheck" [size]="16"></lucide-icon>
-              }
-              @case ('members') {
-                <lucide-icon [img]="icons.Users" [size]="16"></lucide-icon>
-              }
-              @case ('reports') {
-                <lucide-icon [img]="icons.BarChart3" [size]="16"></lucide-icon>
-              }
-              @case ('config') {
-                <lucide-icon [img]="icons.SlidersHorizontal" [size]="16"></lucide-icon>
-              }
-            }
-            <span>{{ tab.label }}</span>
-            @if (tab.badge) {
-              <span class="text-xs font-bold px-2 py-0.5 rounded-full"
-                    [class]="activeTab() === tab.id
-                      ? 'bg-brandPrimary-100 text-brandPrimary-600'
-                      : 'bg-neutralSlate-100 text-neutralSlate-600'">
-                {{ tab.badge }}
-              </span>
-            }
-          </button>
-        }
-      </div>
-    </nav> -->
 
     <!-- ═══ Attendance Controls Bar ═══ -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-neutralSlate-200 mb-4">
@@ -145,39 +107,56 @@
               <lucide-icon [img]="icons.ChevronRight" [size]="16"></lucide-icon>
             </button>
           </div>
+
+          <label class="inline-flex items-center gap-2 rounded-lg border border-neutralSlate-200 bg-neutralSlate-50 px-3 py-1.5 text-xs font-semibold text-neutralSlate-700">
+            <span class="text-neutralSlate-500">Subject</span>
+            <select
+              class="min-w-36 bg-transparent font-semibold text-neutralSlate-900 outline-none"
+              [value]="selectedSubjectId()"
+              (change)="onSubjectChange($any($event.target).value)"
+              [disabled]="!subjectOptions().length"
+              aria-label="Select attendance subject">
+              @for (subject of subjectOptions(); track subject.subject.subjectId) {
+                <option [value]="subject.subject.subjectId">{{ subject.subject.name }}</option>
+              }
+            </select>
+          </label>
+
+          @if (selectedSubject(); as subject) {
+            <span class="text-xs text-neutralSlate-500">
+              {{ subject.yearGroupName }}
+              @if (subject.isExaminable) { · Examinable }
+              @if (subject.marksheetWeightingPercentage) { · {{ subject.marksheetWeightingPercentage }}% weighting }
+            </span>
+          }
+        </div>
+        <div>
+          <div class="inline-flex items-center rounded-lg border border-neutralSlate-200 bg-neutralSlate-50 p-0.5 shadow-sm">
+            <button type="button"
+                    class="px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                    [class.bg-white]="attendanceView() === 'class'"
+                    [class.shadow-sm]="attendanceView() === 'class'"
+                    [class.text-brandPrimary-600]="attendanceView() === 'class'"
+                    [class.text-neutralSlate-500]="attendanceView() !== 'class'"
+                    (click)="setAttendanceView('class')">
+              Class Attendance
+            </button>
+            <!-- <button type="button"
+                    class="px-3 py-1.5 rounded text-xs font-semibold transition-colors"
+                    [class.bg-white]="attendanceView() === 'session'"
+                    [class.shadow-sm]="attendanceView() === 'session'"
+                    [class.text-brandPrimary-600]="attendanceView() === 'session'"
+                    [class.text-neutralSlate-500]="attendanceView() !== 'session'"
+                    (click)="setAttendanceView('session')">
+              Session Attendance
+            </button> -->
+          </div>
         </div>
       </div>
     </section>
 
     <!-- ═══ Register Table ═══ -->
     <section class="bg-white rounded-xl shadow-sm border border-neutralSlate-200 overflow-hidden mb-4">
-      <!-- <div class="p-5 border-b border-neutralSlate-200 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h3 class="text-lg font-semibold text-neutralSlate-900">{{ selectedForm()?.name || 'Class' }} Attendance</h3>
-          <p class="text-sm text-neutralSlate-500">{{ attendanceRows().length }} students in this form</p>
-        </div>
-
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <div class="relative w-full sm:w-72">
-            <lucide-icon [img]="icons.Search" [size]="16"
-                         class="absolute left-3 top-1/2 -translate-y-1/2 text-neutralSlate-400 pointer-events-none"></lucide-icon>
-          <input type="text"
-                   placeholder="Filter student name or ID..."
-                   [ngModel]="searchQuery()"
-                   (ngModelChange)="onSearchInput($event)"
-                   class="w-full pl-9 pr-4 py-2 bg-neutralSlate-50 text-neutralSlate-900 text-sm rounded-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-brandPrimary-500/20 border border-neutralSlate-200 transition-all placeholder:text-neutralSlate-400"/>
-          </div>
-
-          <div class="hidden sm:flex items-center border border-neutralSlate-200 rounded-lg p-0.5 bg-neutralSlate-50">
-            <button type="button" class="p-1.5 rounded bg-white shadow-sm text-brandPrimary-500" title="Table View">
-              <lucide-icon [img]="icons.List" [size]="16"></lucide-icon>
-            </button>
-            <button type="button" class="p-1.5 rounded text-neutralSlate-400 hover:text-neutralSlate-700" title="Grid Card View">
-              <lucide-icon [img]="icons.LayoutGrid" [size]="16"></lucide-icon>
-            </button>
-          </div>
-        </div>
-      </div> -->
 
       <div class="relative">
         @if (attendanceLoading()) {
