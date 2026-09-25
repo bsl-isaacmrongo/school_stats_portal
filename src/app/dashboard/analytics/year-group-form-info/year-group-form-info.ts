@@ -91,6 +91,11 @@ export class YearGroupFormInfo {
   readonly selectedDate = computed(() => this.formatSelectedDate(this.selectedDateValue()));
   readonly isToday = computed(() => this.selectedDateValue() === this.toDateInputValue(new Date()));
   readonly selectedPeriod = signal<string>('Period 2: (09:15 - 10:00) · CL1-157');
+  attendanceView = signal<'class' | 'session'>('class');
+
+  setAttendanceView(view: 'class' | 'session') {
+    this.attendanceView.set(view);
+  }
 
 
   readonly academicYears = this.buildAcademicYears();
@@ -141,6 +146,7 @@ export class YearGroupFormInfo {
         subjects.set(subject.subject.subjectId, subject);
       }
     }
+
     return [...subjects.values()].sort((a, b) => a.subject.name.localeCompare(b.subject.name));
   });
 
