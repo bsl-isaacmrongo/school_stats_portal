@@ -10,7 +10,7 @@ import { Router } from '@angular/router';
   templateUrl: './header.html',
 })
 export class Header {
-  pageTitle = input('📊 Dashboard');
+  pageTitle = input('Dashboard');
   pageSubtitle = input('Student demographic overview');
   lastUpdated = input<Date>(new Date());
   userName = input('Admin');
